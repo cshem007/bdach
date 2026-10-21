@@ -94,6 +94,23 @@ h3{margin:0 0 10px;font:600 1.05rem var(--f-display)}
 .wxh i{display:block;width:100%;max-width:26px;border-radius:5px 5px 2px 2px}.wxh i.ok{background:var(--ok)}.wxh i.warn{background:#d99a00}.wxh i.bad{background:var(--bad)}
 .wxhv{font-size:.7rem}.wxhl{font-size:.68rem;color:var(--muted)}
 .wxnote{margin:10px 0 0}
+.wxmini{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;background:#14375a;border:1px solid #2b5681;color:#fff;border-radius:14px;padding:8px 14px;min-height:56px;font-weight:700}
+.wxmini .mv{font:800 1.6rem/1 var(--f-display)}.wxmini small{font-weight:500;color:#9fb6cc;font-size:.85rem}.wxmini .wxsep{color:#9fb6cc}
+.wxmini .chev{margin-inline-start:auto;color:#9fb6cc;font-size:1.1rem}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;flex:none;background:var(--muted)}.dot.ok{background:#3ddc97}.dot.warn{background:#f2b541}.dot.bad{background:#ff6b5e}
+.wxform{margin-top:8px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.wxform.ok{border-color:var(--ok)}.wxform.warn{border-color:var(--warn)}.wxform.bad{border-color:var(--bad)}
+.wxform>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;font-weight:700}
+.wxform>summary::-webkit-details-marker{display:none}
+.wxform .chev::after{content:'▾'}.wxform[open] .chev::after{content:'▴'}.wxform .chev{margin-inline-start:auto;color:var(--muted)}
+.wxfbody{padding:4px 12px 10px;display:flex;flex-direction:column;gap:3px;font-size:.9rem}
+.pcounts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.pc{border-radius:12px;padding:12px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.pc b{font:800 2rem/1 var(--f-display)}.pc span{font-size:.85rem}.pc small{font-size:.72rem;opacity:.8}
+.pc.ok{background:var(--ok-bg);color:var(--ok)}.pc.bad{background:var(--bad-bg);color:var(--bad)}.pc.cancel{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.ptab{width:100%;border-collapse:collapse;margin:6px 0 10px}.ptab th,.ptab td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:start}
+.ptab th{font-size:.8rem;color:var(--muted);font-weight:600}.ptab td.num,.ptab th.num{text-align:center}.ptab .link{font-weight:700;text-decoration:none}
+.ptab tr.tot td{font-weight:800;border-top:2px solid var(--line)}
 .wxcard{background:#0b2540;color:#fff;border-color:#0b2540}
 .wxcard .link{color:#fff}.wxcard .meta,.wxcard .wxl,.wxcard .wxhl,.wxcard .wxalt,.wxcard .wxdesc{color:#9fb6cc}
 .wxcard .ghost{background:#14375a;color:#fff;border-color:#2b5681}
@@ -212,7 +229,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       <h1>יומן בד״ח רחפנים</h1>
       <span class="sync" id="sync" role="status"><i></i><span>מתחבר…</span></span>
     </div>
-    <div class="who" id="who" hidden><span id="whoName"></span><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button id="profBtn" type="button" class="ghost">הפרופיל שלי</button><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
     <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
   </header>
   <div id="banner" class="banner" hidden></div>
@@ -351,6 +368,10 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       <div class="actions"><button type="submit" class="danger" id="rstGo">אפס הכול</button><button type="button" class="ghost" id="rstCancel">ביטול</button></div>
     </form>
   </section>
+  <section id="profView" class="panel" hidden>
+    <div class="row"><h3 style="margin:0" id="profTitle"></h3><button type="button" class="ghost" id="profBack">חזרה ליומן</button></div>
+    <div id="profBody"></div>
+  </section>
   <div id="printArea"></div>
   <button id="fab" class="fab" type="button" hidden>+ טיסה חדשה</button>
   <section id="formView" class="panel" hidden>
@@ -366,7 +387,11 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
           <div class="placeRow"><input id="place" required autocomplete="off" placeholder="כתבו מקום"><button type="button" class="ghost" id="geoBtn">מיקום נוכחי</button></div>
           <div id="geoMsg" class="meta" role="status"></div>
           <button type="button" class="ghost" id="wxBtn" style="margin-top:6px">בדיקת מזג אוויר</button>
-          <div id="wxMsg" role="status"></div></div>
+          <div id="wxMsg" role="status"></div>
+          <div id="redWrap" class="wx bad" hidden>
+            <label for="redReason"><b>מזג האוויר אדום (לא מומלץ להמריא).</b> כדי לאשר את ההמראה כתבו מדוע התנאים בטוחים לדגם ולמשימה *</label>
+            <textarea id="redReason" rows="2" maxlength="200" placeholder="למשל: הדגם עמיד לרוח הזו ויש מחסה בשטח"></textarea>
+          </div></div>
         <div><label for="date">תאריך הטיסה *</label><input id="date" type="date" required></div>
         <div><label for="time">שעת הטיסה *</label><input id="time" type="time" required></div>
       </div>
@@ -534,7 +559,7 @@ function renderDetail(list){
     const fails=Object.entries(f.checks||{}).filter(([,v])=>v==='לא תקין').map(([k])=>LABELS[k]||k);
     if(fails.length){const fb=el('div','fails','בדיקות שסומנו כלא תקינות:');const ul=el('ul');fails.forEach(t=>ul.append(el('li',null,t)));fb.append(ul);box.append(fb)}
     if(f.comments)box.append(el('div',null,f.comments));
-    if(f.weather)box.append(el('div','meta','מזג אוויר: '+f.weather));
+    if(f.weather){const p=wxParse(f.weather);if(p.rec){if(p.rec.x)box.append(el('div','fails','אושר למרות מזג אוויר אדום. סיבה: '+p.rec.x));box.append(wxDetails(p.rec))}else box.append(el('div','meta','מזג אוויר: '+p.text))}
     if(f.editedAt)box.append(el('div','meta','נערך '+new Date(f.editedAt).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})));
     if(f.voided){
       box.append(el('div','voidnote','הרישום בוטל על ידי '+(f.voided.by||'?')+(f.voided.at?' ב-'+new Date(f.voided.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'')+'. סיבה: '+f.voided.reason));
@@ -581,12 +606,13 @@ function openForm(dateIso,flight){
   if(!allNames.length)refresh();
   $('date').value=dateIso||iso(n);
   $('time').value=pad(n.getHours())+':'+pad(n.getMinutes());
-  $('calView').style.display='none';$('formView').hidden=false;$('addBtn').hidden=true;
+  $('calView').style.display='none';$('profView').hidden=true;profOpen=false;$('formView').hidden=false;$('addBtn').hidden=true;
   $('modelOther').hidden=true;$('modelOther').required=false;$('geoMsg').textContent='';
   $('bdach').open=false;document.querySelectorAll('#sections .sec').forEach(x=>{x.open=false;x.classList.remove('miss')});
   $('fab').hidden=true;updateProg();
-  formCid=Math.random().toString(36).slice(2)+Date.now().toString(36);editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
+  $('redReason').value='';$('redWrap').hidden=true;formCid=Math.random().toString(36).slice(2)+Date.now().toString(36);editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
   if(flight)fillForm(flight);
+  else if(wxLoc){$('place').value=wxLoc.name+' ('+wxLoc.lat+', '+wxLoc.lng+')';wxP=fetchFormWx(true)}   // אותו מיקום כמו בכרטיס, בלי לכייל מחדש
   window.scrollTo(0,0);
 }
 function fillForm(f){
@@ -598,8 +624,9 @@ function fillForm(f){
   else{ms.value='__other';$('modelOther').hidden=false;$('modelOther').required=true;$('modelOther').value=f.model}
   $('place').value=f.place||'';$('date').value=f.date;$('time').value=f.time;$('decision').value=f.decision;$('comments').value=f.comments||'';
   for(const [id,v] of Object.entries(f.checks||{})){const r=document.querySelector('input[name="c_'+id+'"][value="'+v+'"]');if(r)r.checked=true}
-  wxText=f.weather||'';if(wxText){const m=el('div','wx ok','מזג אוויר שנשמר: '+wxText);$('wxMsg').append(m)}
-  applyModelRules();updateProg();
+  wxText=f.weather||'';
+  if(wxText){const p=wxParse(wxText);if(p.rec){$('wxMsg').append(wxDetails(p.rec));$('redReason').value=p.rec.x||''}else $('wxMsg').append(el('div','wx ok','מזג אוויר שנשמר: '+p.text))}
+  applyModelRules();updateProg();syncRed();
 }
 function closeForm(){editingId=null;$('fab').hidden=!token;$('formView').hidden=true;$('calView').style.display='contents';$('addBtn').hidden=false}
 $('addBtn').addEventListener('click',()=>openForm());
@@ -613,7 +640,7 @@ $('geoBtn').addEventListener('click',()=>{
       const lat=pos.coords.latitude.toFixed(5),lng=pos.coords.longitude.toFixed(5);
       let addr='';try{const o=await call('geocode',{lat:lat,lng:lng});addr=(o&&o.address)||''}catch(e){}
       $('place').value=(addr?addr+' ':'')+'('+lat+', '+lng+')';
-      st.textContent='המיקום נוסף. אפשר לערוך אותו.';btn.disabled=false;
+      st.textContent='המיקום נוסף. אפשר לערוך אותו.';btn.disabled=false;wxP=fetchFormWx(true);
     },err=>{
       st.textContent=(err&&err.code===1)?'לא אישרתם גישה למיקום. אפשר לכתוב את המקום ידנית.':'לא הצלחנו לקבל מיקום. אפשר לכתוב את המקום ידנית.';
       btn.disabled=false;
@@ -642,6 +669,7 @@ $('cancelBtn').addEventListener('click',closeForm);
 $('form').addEventListener('submit',async e=>{
   e.preventDefault();
   const err=$('formErr');err.textContent='';
+  if(wxP){try{await wxP}catch(ex){}}      // אם מזג האוויר עוד נטען, מחכים לו (כדי שיישמר ברשומה)
   const checks={};let missing=0;
   for(const id of Object.keys(LABELS)){
     const r=document.querySelector('input[name="c_'+id+'"]:checked');
@@ -662,13 +690,22 @@ $('form').addEventListener('submit',async e=>{
     return}
   const anyBad=Object.values(checks).includes('לא תקין');
   if(anyBad&&$('decision').value==='approved'){err.textContent='סומנו בדיקות לא תקינות. אין לאשר המראה עד לתיקון.';return}
+  let wOut=wxText;const wp=wxParse(wxText);
+  if(wp.rec){
+    if(wp.rec.l==='bad'&&$('decision').value==='approved'){
+      const why=$('redReason').value.trim();
+      if(why.length<5){$('redWrap').hidden=false;err.textContent='מזג האוויר אדום. כדי לאשר המראה כתבו מדוע התנאים בטוחים (לפחות כמה מילים).';$('redReason').focus();return}
+      wp.rec.x=why.slice(0,200);
+    }else delete wp.rec.x;
+    wOut=JSON.stringify(wp.rec);
+  }
   const f={pilot:$('pilot').value,model:modelName,place:$('place').value.trim(),
     date:$('date').value,time:$('time').value,checks,comments:$('comments').value.trim(),decision:$('decision').value,
-    weather:wxText,by:uid||null,createdAt:Date.now(),cid:formCid};
+    weather:wOut,by:uid||null,createdAt:Date.now(),cid:formCid};
   $('saveBtn').disabled=true;
   try{
     const o=editingId?await call('editFlight',{id:editingId,flight:f}):await call('addFlight',{flight:f});
-    if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
+    if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.',RED_NEEDS_REASON:'מזג האוויר אדום. כדי לאשר המראה כתבו מדוע התנאים בטוחים.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
     sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();
     closeForm();await refresh();
   }catch(ex){
@@ -715,7 +752,7 @@ let timer=null,busy=false,ver=null,lastPending=0,adminOpen=false;
 function applyMe(o){
   if(typeof o.admin==='boolean'&&o.admin!==canEdit){canEdit=o.admin;if(!canEdit&&adminOpen)closeAdmin();render()}
   $('whoName').textContent=uid+(clsName?' · '+clsName:'')+(canEdit?' · מנהל':'');
-  $('adminBtn').hidden=!canEdit;
+  $('adminBtn').hidden=!canEdit;$('profBtn').textContent=canEdit?'פרופילים':'הפרופיל שלי';
   const p=canEdit?(o.pending||0):0;
   $('pendBadge').hidden=!p;$('pendBadge').textContent=p;
   if(adminOpen&&p!==lastPending)loadAdmin();
@@ -728,7 +765,7 @@ async function refresh(){
     if(!o.same){flights=o.flights||[];allNames=o.names||[]}
     if(o.className)clsName=o.className;
     if(o.editMinutes)editMin=o.editMinutes;
-    ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same)render();
+    ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same){render();if(profOpen)renderProfile()}
   }catch(ex){
     if(!ex||ex.error!=='AUTH'){setSync(false);$('sync').lastChild.textContent='אין חיבור';showOffline('אין חיבור לשרת. הנתונים יתעדכנו כשהחיבור יחזור.')}
   }finally{busy=false}
@@ -738,7 +775,7 @@ function stopPolling(){if(timer){clearInterval(timer);timer=null}stopCard()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 
 /* ---- admin ---- */
-function openAdmin(){adminOpen=true;$('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=false;$('addBtn').hidden=true;$('fab').hidden=true;$('adminMsg').textContent='';loadAdmin();window.scrollTo(0,0)}
+function openAdmin(){adminOpen=true;profOpen=false;$('profView').hidden=true;$('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=false;$('addBtn').hidden=true;$('fab').hidden=true;$('adminMsg').textContent='';loadAdmin();window.scrollTo(0,0)}
 function closeAdmin(){adminOpen=false;$('resetForm').hidden=true;$('resetBtn').hidden=false;$('adminView').hidden=true;if(token){$('calView').style.display='contents';$('addBtn').hidden=false;$('fab').hidden=false}}
 $('adminBtn').addEventListener('click',openAdmin);
 $('adminBack').addEventListener('click',closeAdmin);
@@ -879,11 +916,38 @@ async function nearestMetar(lat,lng){
   const m=ok_[0];if(!m)return null;
   return{id:m.icaoId,km:Math.round(distKm(lat,lng,m.lat,m.lon)),min:Math.max(0,Math.round((nowS-m.obsTime)/60)),dir:m.wdir,wind:Math.round(m.wspd*1.852),gust:m.wgst?Math.round(m.wgst*1.852):0};
 }
-$('wxBtn').addEventListener('click',async()=>{
-  const btn=$('wxBtn');wxText='';wxShow('');
+/* ---- מזג אוויר בטופס: נשמר ברשומה כנתונים מובנים (JSON קצר) ---- */
+function wxParse(s){
+  if(typeof s==='string'&&s.charAt(0)==='{'){try{const r=JSON.parse(s);if(r&&typeof r==='object'&&typeof r.w==='number')return{rec:r}}catch(e){}}
+  return{text:String(s||'')};
+}
+const wxWind=r=>typeof r.h==='number'?r.h:r.w;
+const wxMiniText=r=>'💨 '+Math.round(wxWind(r))+' קמ״ש · '+Math.round(r.t)+'°';
+function wxLines(r){
+  const out=['רוח בקרקע '+Math.round(r.w)+' קמ״ש (משבים '+Math.round(r.g||0)+')'+(typeof r.h==='number'?', בגובה 80 מ׳ '+Math.round(r.h)+' קמ״ש':'')];
+  out.push('טמפ׳ '+Math.round(r.t)+'°, '+((r.r||0)>0?'גשם '+r.r+' מ״מ':'ללא גשם'));
+  out.push(r.at&&r.at!=='now'?'תחזית לשעה '+String(r.at).slice(11,16):'מזג אוויר כעת');
+  if(r.x)out.push('אושר למרות מזג אוויר אדום. סיבה: '+r.x);
+  if(r.o)out.push('מדידה בפועל ב-'+r.o.i+' ('+r.o.k+' ק״מ): '+r.o.w+' קמ״ש'+(r.o.g?', משבים '+r.o.g:''));
+  return out;
+}
+function wxPlain(s){const p=wxParse(s);return p.rec?wxLines(p.rec).join(' · '):p.text}
+function wxDetails(r,verdict){
+  const dt=document.createElement('details');dt.className='wxform '+(r.l||'ok');
+  const sm=document.createElement('summary');sm.append(el('i','dot '+(r.l||'ok')),el('b',null,wxMiniText(r)+(r.x?' ⚠':'')),el('span','chev'));dt.append(sm);
+  const body=el('div','wxfbody');wxLines(r).forEach(t=>body.append(el('div',null,t)));
+  if(verdict)body.append(el('div','meta',verdict+' זו הערכה כללית ולא מחליפה את מגבלות היצרן ואת ההחלטה שלכם בשטח.'));
+  body.append(el('div','meta','מקור: Open-Meteo'));dt.append(body);return dt;
+}
+const redNow=()=>{const p=wxParse(wxText);return !!(p.rec&&p.rec.l==='bad')};
+function syncRed(){const on=redNow()&&$('decision').value==='approved';$('redWrap').hidden=!on;$('redReason').required=on;if(!on)$('redReason').setCustomValidity('')}
+$('decision').addEventListener('change',syncRed);
+let wxFormSeq=0,wxP=null;
+async function fetchFormWx(auto){
+  const btn=$('wxBtn');wxText='';wxShow('');syncRed();
   const place=$('place').value.trim();
-  if(!place){wxShow('כתבו מקום או לחצו "מיקום נוכחי" קודם.','warn');return}
-  btn.disabled=true;wxShow('בודק מזג אוויר…','');
+  if(!place){if(!auto)wxShow('כתבו מקום או לחצו "מיקום נוכחי" קודם.','warn');return}
+  const seq=++wxFormSeq;btn.disabled=true;wxShow('בודק מזג אוויר…','');
   try{
     let lat,lng;const m=place.match(/\((-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)/);
     if(m){lat=+m[1];lng=+m[2]}
@@ -891,7 +955,7 @@ $('wxBtn').addEventListener('click',async()=>{
       const q=place.replace(/\(.*\)/,'').split(',')[0].trim();
       const g=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?count=1&language=he&name='+encodeURIComponent(q));
       const r=g&&g.results&&g.results[0];
-      if(!r){wxShow('לא מצאנו את המקום. לחצו "מיקום נוכחי" או כתבו שם של עיר.','warn');return}
+      if(!r){if(seq===wxFormSeq)wxShow('לא מצאנו את המקום. לחצו "מיקום נוכחי" או כתבו שם של עיר.','warn');return}
       lat=r.latitude;lng=r.longitude;
     }
     const H='temperature_2m,wind_speed_10m,wind_speed_80m,wind_gusts_10m,precipitation,weather_code';
@@ -901,43 +965,57 @@ $('wxBtn').addEventListener('click',async()=>{
       fetchJson('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current='+HC+'&hourly='+H+'&forecast_days=7&timezone=auto&wind_speed_unit=kmh'),
       fdate===today?nearestMetar(lat,lng).catch(()=>undefined):Promise.resolve(null)
     ]);
+    if(seq!==wxFormSeq)return;
     const key=fdate+'T'+(($('time').value||'00:00').slice(0,2))+':00';
     const hi=w.hourly&&w.hourly.time?w.hourly.time.indexOf(key):-1;
-    let d,when;
-    if(hi>=0){const X=w.hourly;d={t:X.temperature_2m[hi],wind:X.wind_speed_10m[hi],wind80:X.wind_speed_80m&&X.wind_speed_80m[hi],gust:X.wind_gusts_10m[hi],rain:X.precipitation[hi],code:X.weather_code[hi]};when='תחזית לשעה '+key.slice(11)}
-    else if(w.current){const C=w.current;const ci=w.hourly&&w.hourly.time?w.hourly.time.indexOf(hourKey(C.time)):-1;d={t:C.temperature_2m,wind:C.wind_speed_10m,wind80:ci>=0&&w.hourly.wind_speed_80m?w.hourly.wind_speed_80m[ci]:undefined,gust:C.wind_gusts_10m,rain:C.precipitation,code:C.weather_code};when='כעת (אין תחזית לתאריך ולשעה שבחרתם)'}
+    let d,at;
+    if(hi>=0){const X=w.hourly;d={t:X.temperature_2m[hi],wind:X.wind_speed_10m[hi],wind80:X.wind_speed_80m&&X.wind_speed_80m[hi],gust:X.wind_gusts_10m[hi],rain:X.precipitation[hi],code:X.weather_code[hi]};at=key}
+    else if(w.current){const C=w.current;const ci=w.hourly&&w.hourly.time?w.hourly.time.indexOf(hourKey(C.time)):-1;d={t:C.temperature_2m,wind:C.wind_speed_10m,wind80:ci>=0&&w.hourly.wind_speed_80m?w.hourly.wind_speed_80m[ci]:undefined,gust:C.wind_gusts_10m,rain:C.precipitation,code:C.weather_code};at='now'}
     else throw new Error('no data');
     if(obs){d.obsWind=obs.wind;d.obsGust=obs.gust}
     const [lvl,verdict]=wxJudge(d);
-    const hasAlt=typeof d.wind80==='number';
-    const line='רוח בקרקע '+Math.round(d.wind)+' קמ״ש (משבים '+Math.round(d.gust)+')'+(hasAlt?', בגובה 80 מ׳ '+Math.round(d.wind80)+' קמ״ש':'')+', '+Math.round(d.t)+'°, '+((d.rain||0)>0?'גשם '+d.rain+' מ״מ':'ללא גשם');
-    let obsLine='';
-    if(obs)obsLine='מדידה בפועל ב-'+obs.id+' ('+obs.km+' ק״מ, לפני '+obs.min+' דק׳): רוח '+(obs.dir!=null?obs.dir+'° ':'')+obs.wind+' קמ״ש'+(obs.gust?', משבים '+obs.gust:'');
-    else if(fdate===today)obsLine='מדידה בפועל משדה תעופה קרוב לא זמינה.';
-    wxText=[line,when,obsLine&&obs?obsLine:'','Open-Meteo'].filter(Boolean).join(' · ').slice(0,300);
-    wxShow([line+' · '+when,obsLine,verdict+' זו הערכה כללית ולא מחליפה את מגבלות היצרן ואת ההחלטה שלכם בשטח.'].filter(Boolean).join('. '),lvl);
-  }catch(ex){wxShow('לא הצלחנו להביא מזג אוויר עכשיו. אפשר להמשיך בלי, ולבדוק ידנית.','warn')}
-  finally{btn.disabled=false}
-});
+    const r1=x=>typeof x==='number'?Math.round(x*10)/10:undefined;
+    const rec={t:r1(d.t),w:r1(d.wind),h:r1(d.wind80),g:r1(d.gust),r:r1(d.rain)||0,c:d.code,l:lvl,at:at};
+    if(obs)rec.o={i:obs.id,k:obs.km,w:obs.wind,g:obs.gust||0};
+    wxText=JSON.stringify(rec);
+    const b=$('wxMsg');b.replaceChildren(wxDetails(rec,verdict));syncRed();
+  }catch(ex){if(seq===wxFormSeq)wxShow('לא הצלחנו להביא מזג אוויר עכשיו. אפשר להמשיך בלי, ולבדוק ידנית.','warn')}
+  finally{if(seq===wxFormSeq)btn.disabled=false}
+}
+$('wxBtn').addEventListener('click',()=>{wxP=fetchFormWx(false)});
+let wxFormTimer=null;
+function wxRecheck(){if(!wxText)return;clearTimeout(wxFormTimer);wxFormTimer=setTimeout(()=>{wxP=fetchFormWx(true)},500)}
+$('place').addEventListener('input',()=>{if(wxText){wxText='';wxShow('');syncRed()}});   // המקום השתנה: המזג אוויר שנשמר כבר לא רלוונטי
+$('date').addEventListener('change',wxRecheck);$('time').addEventListener('change',wxRecheck);
 
 /* ---- ייצוא היומן ---- */
-const CSV_HEAD=['תאריך','שעה','מטיס','רחפן','מקום','החלטה','בדיקות לא תקינות','הערות','מזג אוויר','רישום','נרשם על ידי'];
+const CSV_HEAD=['תאריך','שעה','מטיס','רחפן','מקום','החלטה','בדיקות לא תקינות','הערות','מזג אוויר','רוח (קמ״ש)','משבים (קמ״ש)','טמפ׳','רישום','נרשם על ידי'];
 function logRows(list){
   return list.slice().sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time)).map(f=>{
     const fails=Object.entries(f.checks||{}).filter(([,v])=>v==='לא תקין').map(([k])=>LABELS[k]||k).join('; ');
     const st=f.voided?'בוטל: '+f.voided.reason+' (על ידי '+f.voided.by+')':'פעיל';
-    return [f.date,f.time,f.pilot,f.model,f.place,(DECISION[f.decision]||[f.decision])[0],fails,f.comments||'',f.weather||'',st,f.by||''];
+    const wp=wxParse(f.weather),wr=wp.rec;
+    return [f.date,f.time,f.pilot,f.model,f.place,(DECISION[f.decision]||[f.decision])[0],fails,f.comments||'',wr?wxLines(wr).join(' · '):wp.text,wr?Math.round(wxWind(wr)):'',wr&&typeof wr.g==='number'?Math.round(wr.g):'',wr?Math.round(wr.t):'',st,f.by||''];
   });
 }
 function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
 function buildCsv(list){return '\ufeff'+[CSV_HEAD].concat(logRows(list)).map(r=>r.map(csvCell).join(',')).join('\r\n')}
+function saveCsv(text,name){
+  const b=new Blob([text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.append(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function printDoc(title,sub,head,rows){
+  const pa=$('printArea');pa.replaceChildren();pa.append(el('h2',null,title));if(sub)pa.append(el('p',null,sub));
+  const t=document.createElement('table');const hd=document.createElement('tr');head.forEach(c=>hd.append(el('th',null,c)));t.append(hd);
+  rows.forEach(r=>{const tr=document.createElement('tr');r.forEach(c=>tr.append(el('td',null,String(c))));t.append(tr)});
+  pa.append(t);setTimeout(()=>window.print(),50);
+}
 function exportName(){return 'bdach-flights-'+iso(new Date())+'.csv'}
 $('exportBtn').addEventListener('click',()=>{$('exportBox').hidden=!$('exportBox').hidden});
 $('csvBtn').addEventListener('click',()=>{
   const list=visible();if(!list.length){showOffline('אין טיסות לייצוא.');return}
-  const b=new Blob([buildCsv(list)],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=exportName();document.body.append(a);a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+  saveCsv(buildCsv(list),exportName());
 });
 $('copyCsvBtn').addEventListener('click',async()=>{
   const list=visible();if(!list.length){showOffline('אין טיסות לייצוא.');return}
@@ -960,7 +1038,7 @@ $('printLogBtn').addEventListener('click',()=>{
 const WX_CUR='temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,weather_code';
 const WX_HOUR='temperature_2m,wind_speed_10m,wind_speed_80m,wind_gusts_10m,precipitation,weather_code';
 let wxLoc=null;try{wxLoc=JSON.parse(load('bdach_loc')||'null')}catch(e){}
-let wxData=null,wxBusy=false,wxCardTimer=null,wxPanelOpen=false;
+let wxData=null,wxBusy=false,wxCardTimer=null,wxPanelOpen=false,wxOpen=load('bdach_wxopen')==='1';
 const WX_ICON=c=>c==null?'':c===0?'☀️':c<=2?'⛅':c===3?'☁️':c<=48?'🌫️':c<=57?'🌦️':c<=67?'🌧️':c<=77?'🌨️':c<=82?'🌧️':'⛈️';
 const WX_DESC=c=>c==null?'':c===0?'בהיר':c<=2?'מעונן חלקית':c===3?'מעונן':c<=48?'ערפל':c<=57?'טפטוף':c<=67?'גשם':c<=77?'שלג':c<=82?'ממטרים':'סופת רעמים';
 function hourKey(t){return String(t||'').slice(0,13)+':00'}
@@ -1006,28 +1084,33 @@ function renderCard(){
   const pill=el('div','wxpill '+lvl);pill.append(el('i'),el('b',null,title));
   top.append(pill,el('span','wxdesc',(WX_ICON(d.code)+' '+WX_DESC(d.code)).trim()));
   box.append(top);
+  const full=el('div','wxfull');full.hidden=!wxOpen;
   const hasAlt=typeof d.wind80==='number';const main=hasAlt?d.wind80:d.wind;
   const from=Math.round(((d.dir||0)%360+360)%360)%360;const to=(from+180)%360;
   const gust=typeof d.gust==='number'?d.gust:main;
   const aria='רוח '+Math.round(main)+' קמ״ש, משבים עד '+Math.round(gust)+'. מגיעה מ־'+from+' מעלות ונושבת אל '+to+' מעלות';
-  const dial=el('div','wxdialbox');dial.innerHTML=dialSvg(main,gust,from,aria);box.append(dial);
-  box.append(el('div','wxalt',hasAlt?'רוח בגובה 80 מ׳':'רוח בקרקע'));
+  const dial=el('div','wxdialbox');dial.innerHTML=dialSvg(main,gust,from,aria);full.append(dial);
+  full.append(el('div','wxalt',hasAlt?'רוח בגובה 80 מ׳':'רוח בקרקע'));
   const chips=el('div','wxchips');
   chips.append(chip('משבים',String(Math.round(gust)),'קמ״ש',windCls(gust*0.8)));
   chips.append(chip('גשם',(d.rain||0)>0?String(d.rain):'ללא',(d.rain||0)>0?'מ״מ':'',(d.rain||0)>=1?'bad':(d.rain||0)>0?'warn':''));
   chips.append(chip('טמפ׳',Math.round(d.t)+'°','',d.t<=0||d.t>=38?'warn':''));
-  box.append(chips);
+  full.append(chips);
   if(hi>=0&&Hh.wind_speed_80m){
     const strip=el('div','wxhours');strip.setAttribute('aria-label','רוח בגובה 80 מ׳ בשעות הקרובות');
     for(let i=hi;i<Math.min(hi+8,Hh.time.length);i++){
       const v=Hh.wind_speed_80m[i];const col=el('div','wxh');const b=el('i',windCls(v));b.style.height=Math.max(6,Math.min(100,v/50*100))+'%';b.title=Math.round(v)+' קמ״ש';
       col.append(el('span','wxhv',String(Math.round(v))),b,el('span','wxhl',Hh.time[i].slice(11,16)));strip.append(col);
     }
-    box.append(strip);
+    full.append(strip);
   }
   let note=verdict+' הערכה כללית, לא מחליפה את מגבלות היצרן והחלטת המטיס.';
   if(obs&&obs.km<=15)note='מדידה בשדה '+obs.id+' ('+obs.km+' ק״מ): '+obs.wind+' קמ״ש. '+note;
-  box.append(el('p','meta wxnote',note));
+  full.append(el('p','meta wxnote',note));
+  const mini=el('button','wxmini');mini.type='button';mini.setAttribute('aria-expanded',String(wxOpen));
+  mini.append(el('i','dot '+lvl),el('b','mv',String(Math.round(main))),el('small',null,'קמ״ש'),el('span','wxsep','·'),el('b','mv',Math.round(d.t)+'°'),el('span','chev',wxOpen?'▴':'▾'));
+  mini.addEventListener('click',()=>{wxOpen=!wxOpen;store('bdach_wxopen',wxOpen?'1':'0');full.hidden=!wxOpen;mini.setAttribute('aria-expanded',String(wxOpen));mini.querySelector('.chev').textContent=wxOpen?'▴':'▾'});
+  box.append(mini,full);
 }
 function renderCardState(){
   $('wxPlace').textContent=wxLoc?wxLoc.name:'בחרו מיקום';
@@ -1081,6 +1164,94 @@ function startCard(){stopCard();loadCard();wxCardTimer=setInterval(()=>{if(!docu
 function stopCard(){if(wxCardTimer){clearInterval(wxCardTimer);wxCardTimer=null}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token&&(!wxData||Date.now()-wxData.at>5*60*1000))loadCard()});
 
+/* ---- פרופיל טייס: מונים, דגמים, רשימת טיסות וייצוא. תלמיד רואה רק את עצמו, מנהל רואה טבלת כיתה ואת כולם ---- */
+let profOpen=false,profName=null;
+const fmtDate=s=>s?new Date(s.slice(0,10)+'T00:00:00').toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'2-digit'}):'';
+function flightKind(f){return(f.voided||f.decision==='canceled')?'can':f.decision==='approved'?'ok':'bad'}
+function statsOf(list){
+  const s={ok:0,bad:0,can:0,models:{},last:''};
+  list.forEach(f=>{const k=flightKind(f);s[k]++;const m=f.model||'—';(s.models[m]=s.models[m]||{ok:0,bad:0,can:0})[k]++;
+    const t=(f.date||'')+' '+(f.time||'');if(k!=='can'&&t>s.last)s.last=t});
+  return s;
+}
+const flightsOf=name=>flights.filter(f=>f.pilot===name);
+function pilotNames(){const s=new Set(allNames);flights.forEach(f=>{if(f.pilot)s.add(f.pilot)});return[...s].sort((a,b)=>a.localeCompare(b,'he'))}
+const PROF_HEAD=['שם','מאושרות','לא מאושרות','בוטלו (לא נספרות)','סה״כ טיסות','טיסה אחרונה'];
+function classRows(){return pilotNames().map(n=>{const s=statsOf(flightsOf(n));return[n,s.ok,s.bad,s.can,s.ok+s.bad,fmtDate(s.last)]})}
+function numCell(v){const td=el('td','num',String(v));return td}
+function openProfile(name){
+  if(!token||!uid)return;
+  profName=canEdit?(name||null):uid;profOpen=true;
+  adminOpen=false;$('adminView').hidden=true;$('resetForm').hidden=true;$('resetBtn').hidden=false;
+  $('calView').style.display='none';$('formView').hidden=true;$('addBtn').hidden=true;$('fab').hidden=true;
+  $('profView').hidden=false;renderProfile();window.scrollTo(0,0);
+}
+function closeProfile(){profOpen=false;profName=null;$('profView').hidden=true;if(token){$('calView').style.display='contents';$('addBtn').hidden=false;$('fab').hidden=false}}
+$('profBtn').addEventListener('click',()=>openProfile(null));
+$('profBack').addEventListener('click',()=>{if(canEdit&&profName){profName=null;renderProfile();window.scrollTo(0,0)}else closeProfile()});
+function actionRow(csvFn,printFn){
+  const a=el('div','actions');
+  const c=el('button',null,'הורדת CSV (אקסל)');c.type='button';c.id='profCsv';c.addEventListener('click',csvFn);
+  const p=el('button','ghost','הדפסה / PDF');p.type='button';p.id='profPrint';p.addEventListener('click',printFn);
+  a.append(c,p);return a;
+}
+function renderProfile(){
+  const box=$('profBody');box.replaceChildren();
+  const today=iso(new Date());
+  if(canEdit&&!profName){
+    $('profTitle').textContent='פרופילים'+(clsName?' · '+clsName:'');$('profBack').textContent='חזרה ליומן';
+    const rows=classRows();
+    box.append(el('p','meta','לחצו על שם כדי לראות את הפרופיל המלא. בוטלו מוצגות בנפרד ולא נספרות בסה״כ.'));
+    const t=document.createElement('table');t.className='ptab';
+    const hd=document.createElement('tr');['שם','מאושרות','לא מאושרות','בוטלו','סה״כ'].forEach((c,i)=>hd.append(el('th',i>0?'num':null,c)));t.append(hd);
+    const tot=[0,0,0,0];
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');const td=document.createElement('td');
+      const b=el('button','link',r[0]);b.type='button';b.addEventListener('click',()=>openProfile(r[0]));td.append(b);if(r[5])td.append(el('div','meta','טיסה אחרונה '+r[5]));tr.append(td);
+      for(let i=1;i<5;i++){tr.append(numCell(r[i]));tot[i-1]+=r[i]}
+      t.append(tr);
+    });
+    const tr=document.createElement('tr');tr.className='tot';tr.append(el('td',null,'סה״כ'));tot.forEach(v=>tr.append(numCell(v)));t.append(tr);
+    box.append(t);
+    box.append(actionRow(
+      ()=>{saveCsv('﻿'+[PROF_HEAD].concat(rows).map(r=>r.map(csvCell).join(',')).join('\r\n'),'bdach-class-'+today+'.csv')},
+      ()=>printDoc('סיכום כיתה · '+(clsName||'')+' · '+new Date().toLocaleDateString('he-IL'),'בוטלו מוצגות בנפרד ולא נספרות בסה״כ.',PROF_HEAD,rows.concat([['סה״כ'].concat(tot,[''])]))));
+    return;
+  }
+  const name=canEdit?profName:uid;
+  const list=flightsOf(name),s=statsOf(list);
+  $('profTitle').textContent=(canEdit?'פרופיל · ':'הפרופיל שלי · ')+name;
+  $('profBack').textContent=canEdit?'חזרה לטבלת הכיתה':'חזרה ליומן';
+  const cn=el('div','pcounts');
+  [['מאושרות',s.ok,'ok',''],['לא מאושרות',s.bad,'bad',''],['בוטלו',s.can,'cancel','לא נספרות']].forEach(([l,n,c,sub])=>{
+    const d=el('div','pc '+c);d.append(el('b',null,String(n)),el('span',null,l));if(sub)d.append(el('small',null,sub));cn.append(d)});
+  box.append(cn);
+  const ms=Object.keys(s.models).sort((a,b)=>a.localeCompare(b,'he'));
+  if(ms.length){
+    box.append(el('h4','sec-title','לפי דגם'));
+    const t=document.createElement('table');t.className='ptab';
+    const hd=document.createElement('tr');['דגם','מאושרות','לא מאושרות','בוטלו'].forEach((c,i)=>hd.append(el('th',i?'num':null,c)));t.append(hd);
+    ms.forEach(m=>{const tr=document.createElement('tr');tr.append(el('td',null,m),numCell(s.models[m].ok),numCell(s.models[m].bad),numCell(s.models[m].can));t.append(tr)});
+    box.append(t);
+  }
+  box.append(el('h4','sec-title','הטיסות ('+list.length+')'));
+  if(!list.length)box.append(el('p','empty','אין טיסות רשומות.'));
+  list.slice().sort((a,b)=>((b.date||'')+' '+(b.time||'')).localeCompare((a.date||'')+' '+(a.time||''))).forEach(f=>{
+    const fb=el('div','flight'+(f.voided?' voided':''));const r1=el('div','row');
+    const dec=f.voided?['בוטל','bad']:(DECISION[f.decision]||['','']);
+    r1.append(el('b',null,fmtDate(f.date)+' · '+(f.time||'')),el('span','badge '+dec[1],dec[0]));fb.append(r1);
+    fb.append(el('div','meta',[f.model,f.place].filter(Boolean).join('  ·  ')));
+    if(f.weather){const p=wxParse(f.weather);if(p.rec){if(p.rec.x)fb.append(el('div','fails','אושר למרות מזג אוויר אדום. סיבה: '+p.rec.x));fb.append(wxDetails(p.rec))}else fb.append(el('div','meta','מזג אוויר: '+p.text))}
+    if(f.voided)fb.append(el('div','voidnote','סיבת הביטול: '+f.voided.reason));
+    box.append(fb);
+  });
+  box.append(actionRow(
+    ()=>{if(!list.length){showOffline('אין טיסות לייצוא.');return}saveCsv(buildCsv(list),'bdach-'+today+'-profile.csv')},
+    ()=>{if(!list.length){showOffline('אין טיסות להדפסה.');return}
+      printDoc('פרופיל טייס · '+name+' · '+(clsName||'')+' · '+new Date().toLocaleDateString('he-IL'),
+        'מאושרות: '+s.ok+' · לא מאושרות: '+s.bad+' · בוטלו (לא נספרות): '+s.can,CSV_HEAD,logRows(list))}));
+}
+
 /* ---- היומן מאחורי כפתור ---- */
 function setCal(open){$('calPanel').hidden=!open;$('calToggle').setAttribute('aria-expanded',String(open));$('calToggle').textContent=open?'הסתר יומן':'📅 יומן וסינון';store('bdach_cal',open?'1':'0')}
 $('calToggle').addEventListener('click',()=>setCal($('calPanel').hidden));
@@ -1097,6 +1268,7 @@ function enterApp(o){
 }
 function logout(msg){
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
+  profOpen=false;profName=null;$('profView').hidden=true;
   store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
   $('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=true;$('who').hidden=true;
   $('addBtn').hidden=true;$('fab').hidden=true;showOffline('');
