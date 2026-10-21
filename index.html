@@ -436,7 +436,7 @@ const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
 
 let flights=[], allNames=[], token=null, uid=null, canEdit=false, editMin=15, editingId=null, wxText='';
-let fPilot='', fModel='';
+let fPilot='', fModel='', formCid='';
 const now=new Date();
 let viewY=now.getFullYear(), viewM=now.getMonth(), sel=iso(now);
 
@@ -585,7 +585,7 @@ function openForm(dateIso,flight){
   $('modelOther').hidden=true;$('modelOther').required=false;$('geoMsg').textContent='';
   $('bdach').open=false;document.querySelectorAll('#sections .sec').forEach(x=>{x.open=false;x.classList.remove('miss')});
   $('fab').hidden=true;updateProg();
-  editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
+  formCid=Math.random().toString(36).slice(2)+Date.now().toString(36);editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
   if(flight)fillForm(flight);
   window.scrollTo(0,0);
 }
@@ -664,7 +664,7 @@ $('form').addEventListener('submit',async e=>{
   if(anyBad&&$('decision').value==='approved'){err.textContent='סומנו בדיקות לא תקינות. אין לאשר המראה עד לתיקון.';return}
   const f={pilot:$('pilot').value,model:modelName,place:$('place').value.trim(),
     date:$('date').value,time:$('time').value,checks,comments:$('comments').value.trim(),decision:$('decision').value,
-    weather:wxText,by:uid||null,createdAt:Date.now()};
+    weather:wxText,by:uid||null,createdAt:Date.now(),cid:formCid};
   $('saveBtn').disabled=true;
   try{
     const o=editingId?await call('editFlight',{id:editingId,flight:f}):await call('addFlight',{flight:f});
@@ -680,6 +680,7 @@ function store(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 let classCode=load('bdach_class')||'',clsName='',claimedSet=[];
 const API_URL=(window.BDACH_API||'').trim();
+const SAFE_RETRY={classInfo:1,login:1,flights:1,adminData:1,requestStatus:1,me:1,geocode:1};
 function call(action,p){
   const payload=JSON.stringify(Object.assign({action,token,code:classCode},p||{}));
   const done=(r,res,rej)=>{let o;try{o=typeof r==='string'?JSON.parse(r):r}catch(e){return rej(e)}
@@ -690,9 +691,16 @@ function call(action,p){
     }
     if(!API_URL){rej({error:'NO_SERVER'});return}
     // text/plain = בקשה פשוטה, בלי preflight של CORS (Apps Script לא עונה ל-OPTIONS)
-    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,redirect:'follow'})
-      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
-      .then(t=>done(t,res,rej)).catch(rej);
+    const once=()=>{
+      const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),25000);
+      return fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,redirect:'follow',signal:ac.signal})
+        .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+        .then(t=>{JSON.parse(t);return t})                  // תשובה שאינה JSON (דף שגיאה של גוגל) נחשבת כשל
+        .finally(()=>clearTimeout(tm));
+    };
+    // קריאות שבטוח לחזור עליהן: ניסיון נוסף אחד אחרי כשל רשת או הפעלה קרה של השרת
+    const again=SAFE_RETRY[action]?()=>once().catch(()=>new Promise(r=>setTimeout(r,700)).then(once)):once;
+    again().then(t=>done(t,res,rej)).catch(rej);
   });
 }
 function showOffline(msg){const b=$('banner');b.textContent=msg;b.hidden=!msg}
@@ -725,7 +733,7 @@ async function refresh(){
     if(!ex||ex.error!=='AUTH'){setSync(false);$('sync').lastChild.textContent='אין חיבור';showOffline('אין חיבור לשרת. הנתונים יתעדכנו כשהחיבור יחזור.')}
   }finally{busy=false}
 }
-function startPolling(){stopPolling();timer=setInterval(()=>{if(!document.hidden)refresh()},15000);startCard()}
+function startPolling(){stopPolling();timer=setInterval(()=>{if(!document.hidden)refresh()},30000);startCard()}
 function stopPolling(){if(timer){clearInterval(timer);timer=null}stopCard()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 
@@ -745,7 +753,7 @@ function armBtn(label,cls,fn){
     fn()});
   return b;
 }
-const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.'};
+const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',IS_ADMIN:'קודם הסירו ממנו את הניהול.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.'};
 let lastCodes=[];
 const fmtCode=c=>c&&c.length>3?c.slice(0,3)+'-'+c.slice(3):c||'';
 function showCodes(list,title){
@@ -803,6 +811,7 @@ function renderAdmin(o){
         if(r&&r.ok){canEdit=false;await refresh();closeAdmin();showOffline('הניהול הועבר ל'+u.name+'.')}else loadAdmin()}));
       act.append(armBtn(u.admin?'הסר ניהול':'הוסף כמנהל','danger',async()=>{await adminAct('setAdmin',{name:u.name,admin:!u.admin},u.admin?'הניהול הוסר.':u.name+' הוא מנהל עכשיו.');await refresh();loadAdmin()}));
       act.append(armBtn(u.hasPin?'אפס קוד':'קוד חדש','danger',async()=>{const r=await adminAct('resetPin',{name:u.name},u.hasPin?'הקוד של '+u.name+' אופס. מסרו לו את הקוד החד-פעמי החדש.':'הונפק קוד חדש ל'+u.name+'.');if(r&&r.code)showCodes([{name:u.name,code:r.code}],'קוד חד-פעמי חדש ל'+u.name);loadAdmin()}));
+      if(!u.admin)act.append(armBtn('הסר מהכיתה','danger',async()=>{await adminAct('removeUser',{name:u.name},u.name+' הוסר/ה מהכיתה.');await refresh();loadAdmin()}));
       box.append(act);
     }
     ul.append(box);
@@ -841,7 +850,7 @@ $('resetForm').addEventListener('submit',async e=>{
   $('rstGo').disabled=true;
   try{
     const o=await call('resetAll',{pin});
-    if(o.ok){$('resetForm').hidden=true;$('resetBtn').hidden=false;showCodes(o.codes,'הכיתה אופסה. הטיסות והבקשות נמחקו. מסרו לכל תלמיד את הקוד החד-פעמי החדש שלו.');$('adminMsg').textContent='';await refresh();loadAdmin();return}
+    if(o.ok){$('resetForm').hidden=true;$('resetBtn').hidden=false;showCodes(o.codes,'הכיתה אופסה. הטיסות והבקשות נמחקו'+((o.removed&&o.removed.length)?', והוסרו מי שהצטרפו בבקשה ('+o.removed.join(', ')+')':'')+'. מסרו לכל תלמיד את הקוד החד-פעמי החדש שלו.');$('adminMsg').textContent='';await refresh();loadAdmin();return}
     err.textContent=({BAD:'קוד שגוי. נשארו '+o.left+' ניסיונות.',LOCKED:'נעול ל-'+o.minutes+' דקות אחרי יותר מדי ניסיונות.',FORBIDDEN:'רק מנהל יכול לאפס.'})[o.error]||'האיפוס נכשל.';
   }catch(ex){if(!ex||ex.error!=='AUTH')err.textContent='האיפוס נכשל. נסו שוב.'}
   finally{$('rstGo').disabled=false}
@@ -981,7 +990,7 @@ function dialSvg(main,gust,from,aria){
    +'<rect x="'+(fx-25).toFixed(1)+'" y="'+(fy-12).toFixed(1)+'" width="50" height="24" rx="12" fill="#0b2540" stroke="#fff" stroke-width="1.5"/><text x="'+fx.toFixed(1)+'" y="'+(fy+5).toFixed(1)+'" fill="#fff">'+from+'°</text></g>'
    +'<text class="wxnum" x="170" y="180" font-family="inherit" font-size="88" font-weight="800" fill="#fff" text-anchor="middle">'+Math.round(main)+'</text>'
    +'<text x="170" y="208" font-family="inherit" font-size="18" fill="#9fb6cc" text-anchor="middle">קמ״ש</text>'
-   +'<g font-family="inherit" font-size="12" fill="#7f99b3" text-anchor="middle"><text x="104" y="268">0</text><text x="236" y="268">50</text></g></svg>';
+   +'<g font-family="inherit" font-size="12" fill="#7f99b3" text-anchor="middle"><text x="120" y="236">0</text><text x="220" y="236">50</text></g></svg>';
 }
 function chip(label,value,unit,cls){const t=el('div','wxchip'+(cls?' '+cls:''));const v=el('b',null,value);if(unit)v.append(' ',el('small',null,unit));t.append(el('span','wxl',label),v);return t}
 function renderCard(){
@@ -1129,13 +1138,13 @@ async function showLogin(msg){
 $('classForm').addEventListener('submit',async e=>{
   e.preventDefault();const code=NORM($('ccode').value);
   if(code.length<4){$('cerr').textContent='הקלידו את קוד הכיתה.';return}
-  $('cbtn').disabled=true;classCode=code;
+  const clbl=$('cbtn').textContent;$('cbtn').disabled=true;$('cbtn').textContent='בודק…';classCode=code;
   try{
     const o=await call('classInfo');
     if(o.error){classCode='';$('cerr').textContent=CLS_ERR[o.error]||'הקוד לא תקין.';return}
     store('bdach_class',code);await showLogin();
   }catch(ex){classCode='';$('cerr').textContent='אין חיבור לשרת. נסו שוב.'}
-  finally{$('cbtn').disabled=false}
+  finally{$('cbtn').disabled=false;$('cbtn').textContent=clbl}
 });
 $('changeClass').addEventListener('click',()=>{classCode='';store('bdach_class',null);store('bdach_ci',null);showClassStep()});
 function setLoginMode(m){
@@ -1156,7 +1165,7 @@ $('loginForm').addEventListener('submit',async e=>{
   if(loginMode==='register'&&NORM($('lsc').value).length<4){err.textContent='הקלידו את הקוד החד-פעמי מהמנהל.';return}
   if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד האישי הוא 4 עד 6 ספרות.';return}
   if(loginMode==='register'&&$('lpin2').value.trim()!==pin){err.textContent='שני הקודים לא זהים.';return}
-  $('lbtn').disabled=true;
+  const lbl=$('lbtn').textContent;$('lbtn').disabled=true;$('lbtn').textContent='מתחבר…';
   try{
     const o=await call(loginMode==='register'?'register':'login',{name,pin,studentCode:$('lsc').value});
     if(o.token){enterApp(o);return}
@@ -1165,7 +1174,7 @@ $('loginForm').addEventListener('submit',async e=>{
     if(o.error==='BAD_CLASS'){classCode='';store('bdach_class',null);showClassStep('קוד הכיתה השתנה. הקלידו את הקוד החדש.');return}
     err.textContent=({BAD:'קוד שגוי. נשארו '+o.left+' ניסיונות.',BAD_CODE:'הקוד החד-פעמי שגוי. נשארו '+o.left+' ניסיונות.',NO_CODE:'עוד לא הונפק לכם קוד חד-פעמי. בקשו מהמנהל.',CODE_EXPIRED:'הקוד החד-פעמי פג תוקף. בקשו מהמנהל קוד חדש.',LOCKED:'נעול ל-'+(o.minutes||10)+' דקות אחרי יותר מדי ניסיונות.',BAD_PIN_FORMAT:'הקוד האישי הוא 4 עד 6 ספרות.',PENDING:'הבקשה שלכם ממתינה לאישור מנהל.',REJECTED:'הבקשה נדחתה.'})[o.error]||'הכניסה נכשלה.';
   }catch(ex){err.textContent='אין חיבור לשרת. נסו שוב.'}
-  finally{$('lbtn').disabled=false}
+  finally{$('lbtn').disabled=false;$('lbtn').textContent=lbl}
 });
 
 /* ---- בקשת הצטרפות למי שלא ברשימה ---- */
