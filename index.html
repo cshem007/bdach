@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>יומן בד״ח רחפנים</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0b2540"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
+<script>window.BDACH_API="https://script.google.com/macros/s/AKfycbw7CoSL7RetO0In8kR5w7uvnzV-0wjNn65VLKBlInrBpPAHQQgKJZEOvZ_-OVt-CuRhTQ/exec";/* באתר החיצוני: כתובת ה-Web app של Apps Script (נגמרת ב-/exec) */</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Rubik:wght@600;700&display=swap">
+<style>
+/* Layout: sticky header, month grid left-to-right in Hebrew order (Sunday on the right), day detail panel beneath; add-flight form is a full-width sheet. */
+:root{
+  --bg:#eef3f8; --surface:#ffffff; --ink:#12263d; --muted:#5b6f86; --line:#d9e2ec;
+  --brand:#12365a; --brand-ink:#ffffff; --accent:#1a73b8;
+  --ok:#17794a; --ok-bg:#e0f3e8; --bad:#b3261e; --bad-bg:#fbe4e1; --warn:#8a5a00; --warn-bg:#fff1d6;
+  --today:#ffe9a8;
+  --f-body:'Heebo',Arial,sans-serif; --f-display:'Rubik','Heebo',Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1824; --surface:#15263a; --ink:#e6eef7; --muted:#94a8bf; --line:#27405c;
+  --brand:#0a2038; --brand-ink:#ffffff; --accent:#5aa9e6;
+  --ok:#5fd39a; --ok-bg:#173a2b; --bad:#ff8a80; --bad-bg:#4a1f1c; --warn:#ffcb6b; --warn-bg:#4a3a14;
+  --today:#5a4a14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1824; --surface:#15263a; --ink:#e6eef7; --muted:#94a8bf; --line:#27405c;
+  --brand:#0a2038; --brand-ink:#ffffff; --accent:#5aa9e6;
+  --ok:#5fd39a; --ok-bg:#173a2b; --bad:#ff8a80; --bad-bg:#4a1f1c; --warn:#ffcb6b; --warn-bg:#4a3a14;
+  --today:#5a4a14; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;direction:rtl;
+  padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1000px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:14px}
+header{background:var(--brand);color:var(--brand-ink);border-radius:14px;padding:18px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{margin:0;font:700 1.45rem var(--f-display)}
+header p{margin:4px 0 0;opacity:.8;font-size:.9rem}
+button{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:10px 16px;background:var(--accent);color:#fff;font-weight:700}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+button.danger{background:transparent;color:var(--bad);border:1px solid var(--bad);padding:6px 12px;font-weight:500}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.5;cursor:default}
+.banner{background:var(--warn-bg);color:var(--warn);padding:10px 14px;border-radius:10px;font-size:.9rem}
+.panel{background:var(--surface);border-radius:14px;padding:16px;border:1px solid var(--line)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cal-head h2{margin:0;font:600 1.15rem var(--f-display)}
+.cal-head .nav{display:flex;gap:6px}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.dow{text-align:center;font-size:.78rem;color:var(--muted);padding:4px 0}
+.day{min-height:78px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);padding:5px;text-align:right;display:flex;flex-direction:column;gap:3px;font-weight:400;min-width:0}
+.day.off{opacity:.45}
+.day.today{background:var(--today)}
+.day.sel{outline:2px solid var(--accent);outline-offset:-1px}
+.day .n{font-size:.85rem;font-weight:700}
+.chip{font-size:.7rem;border-radius:5px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.cancel{background:var(--line);color:var(--muted)}
+.more{font-size:.7rem;color:var(--muted)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:5px;vertical-align:-1px}
+h3{margin:0 0 10px;font:600 1.05rem var(--f-display)}
+.flight{border-top:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:6px}
+.flight:first-of-type{border-top:0}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.row b{font-size:1rem}
+.meta{color:var(--muted);font-size:.88rem}
+.badge{font-size:.8rem;font-weight:700;border-radius:20px;padding:3px 10px}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.bad{background:var(--bad-bg);color:var(--bad)}
+.badge.cancel{background:var(--line);color:var(--muted)}
+.flight.voided>.row b,.flight.voided .meta{text-decoration:line-through;opacity:.7}
+.voidnote{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:.9rem}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters select{flex:1;min-width:130px;width:auto}
+.filters .meta{flex-basis:100%}
+.exportbox{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+#csvBox{width:100%;min-height:100px;direction:ltr;font-size:13px}
+.wx{margin-top:8px;border-radius:8px;padding:8px 12px;font-size:.9rem}
+.wx.ok{background:var(--ok-bg);color:var(--ok)}.wx.warn{background:var(--warn-bg);color:var(--warn)}.wx.bad{background:var(--bad-bg);color:var(--bad)}
+#printArea table{width:100%;border-collapse:collapse;font-size:9pt}#printArea th,#printArea td{border:1px solid #444;padding:3px 5px;text-align:right;vertical-align:top}
+.wxhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between}
+.wxhead .link{font:600 1rem var(--f-display);color:var(--ink);text-decoration:none}
+.wxsetrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.wxcityf{display:flex;gap:8px;flex:1;min-width:220px}.wxcityf input{flex:1;min-width:0}
+.wxban{display:flex;justify-content:space-between;align-items:center;gap:8px;border-radius:12px;padding:12px 14px;margin-top:10px;font-size:1.05rem}
+.wxban b{font:700 1.15rem var(--f-display)}.wxban.ok{background:var(--ok-bg);color:var(--ok)}.wxban.warn{background:var(--warn-bg);color:var(--warn)}.wxban.bad{background:var(--bad-bg);color:var(--bad)}
+.wxgauge{margin-top:12px}.wxbig{display:flex;align-items:baseline;gap:6px}.wxbig b{font:700 3rem/1 var(--f-display)}.wxbig span{font-size:1.1rem}.wxbig small{color:var(--muted);margin-inline-start:auto;font-size:.85rem}
+.wxbar{position:relative;height:14px;border-radius:7px;margin-top:10px;direction:ltr;background:linear-gradient(90deg,var(--ok) 0 50%,#d99a00 50% 70%,var(--bad) 70% 100%);opacity:.9}
+.wxm{position:absolute;top:-5px;width:6px;height:24px;border-radius:3px;background:var(--ink);transform:translateX(-50%);box-shadow:0 0 0 2px var(--surface)}
+.wxscale{display:flex;justify-content:space-between;direction:ltr;font-size:.72rem;color:var(--muted);margin-top:4px}
+.wxtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.wxt{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.wxt.ok .wxv{color:var(--ok)}.wxt.warn .wxv{color:var(--warn)}.wxt.bad .wxv{color:var(--bad)}
+.wxl{font-size:.75rem;color:var(--muted)}.wxv{font:700 1.15rem var(--f-display)}.wxs{font-size:.72rem;color:var(--muted)}
+.wxarrow{display:inline-block;width:1.5em;text-align:center;transform-origin:center}
+.wxhours{display:flex;gap:6px;align-items:flex-end;height:78px;margin-top:12px;direction:ltr}
+.wxh{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px;min-width:0}
+.wxh i{display:block;width:100%;max-width:26px;border-radius:5px 5px 2px 2px}.wxh i.ok{background:var(--ok)}.wxh i.warn{background:#d99a00}.wxh i.bad{background:var(--bad)}
+.wxhv{font-size:.7rem}.wxhl{font-size:.68rem;color:var(--muted)}
+.wxnote{margin:10px 0 0}
+.wxcard{background:#0b2540;color:#fff;border-color:#0b2540}
+.wxcard .link{color:#fff}.wxcard .meta,.wxcard .wxl,.wxcard .wxhl,.wxcard .wxalt,.wxcard .wxdesc{color:#9fb6cc}
+.wxcard .ghost{background:#14375a;color:#fff;border-color:#2b5681}
+.wxcard input{background:#fff;color:#12365a}
+.wxtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}
+.wxpill{display:flex;align-items:center;gap:8px;border-radius:99px;padding:6px 14px;font-size:1rem}
+.wxpill i{width:9px;height:9px;border-radius:50%;background:currentColor;display:block}
+.wxpill.ok{background:#3ddc97;color:#06281a}.wxpill.warn{background:#f2b541;color:#2b1d00}.wxpill.bad{background:#ff6b5e;color:#3a0804}
+.wxdialbox{margin:6px auto 0;max-width:330px}.wxdial{display:block;width:100%;height:auto}
+.wxalt{text-align:center;font-size:.8rem;margin-top:-6px}
+.wxchips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.wxchip{background:#14375a;border-radius:14px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.wxchip b{font:800 1.25rem var(--f-display)}.wxchip small{font-size:.75rem;font-weight:500;color:#9fb6cc}
+.wxchip.warn b{color:#f2b541}.wxchip.bad b{color:#ff6b5e}
+.wxcard .wxh i.ok{background:#3ddc97}.wxcard .wxh i.warn{background:#f2b541}.wxcard .wxh i.bad{background:#ff6b5e}
+.wxcard .wxhv{color:#fff}
+
+.calbtn{width:100%;min-height:50px;font-weight:700}
+@media(min-width:651px){.wxtiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.voidform{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.voidform input{flex:1;min-width:180px}
+.fails{background:var(--bad-bg);color:var(--bad);border-radius:8px;padding:8px 12px;font-size:.88rem}
+.fails ul{margin:4px 0 0;padding-inline-start:18px}
+.empty{color:var(--muted)}
+label{display:block;font-weight:700;margin:12px 0 5px;font-size:.92rem}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:12px 10px;min-height:46px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink)}
+textarea{min-height:80px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
+.check{border-top:1px solid var(--line);padding:10px 0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.check b{font-weight:500;font-size:.92rem}
+.choices{display:flex;gap:10px;flex-wrap:wrap}
+.choices{display:grid;grid-template-columns:repeat(3,auto);gap:8px}
+.choices label{margin:0;font-weight:500;display:flex;align-items:center;justify-content:center;font-size:.9rem;border:1px solid var(--line);border-radius:10px;min-height:44px;padding:0 14px;cursor:pointer;background:var(--surface);color:var(--ink);position:relative}
+.choices input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.choices label:has(input:checked){color:#fff;border-color:transparent}
+.choices label.ok:has(input:checked){background:var(--ok)}
+.choices label.bad:has(input:checked){background:var(--bad)}
+.choices label.na:has(input:checked){background:var(--muted)}
+.choices label:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.sync{font-size:.8rem;display:inline-flex;align-items:center;gap:6px;opacity:.9}
+.sync i{width:9px;height:9px;border-radius:50%;background:#f5b942;display:inline-block}
+.sync.live i{background:#4ade80}
+.dots{display:none;gap:3px;flex-wrap:wrap}
+.dots i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dots i.ok{background:var(--ok)}.dots i.bad{background:var(--bad)}.dots i.cancel{background:var(--muted)}
+.fab{display:none}
+.sec-title{margin:18px 0 4px;font:600 1.05rem var(--f-display)}
+.alert{background:var(--warn-bg);color:var(--warn);padding:10px 12px;border-radius:8px;font-size:.9rem}
+.err{color:var(--bad);font-weight:700;margin-top:8px}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center}
+.confirm{display:flex;gap:8px;align-items:center;font-weight:400;margin-top:12px}
+.confirm input{width:auto}
+@media(max-width:650px){
+  body{font-size:16px}
+  .wrap{padding-block:10px calc(96px + env(safe-area-inset-bottom,0px));gap:10px}
+  header{padding:14px 16px}
+  header h1{font-size:1.25rem}
+  #addBtn{display:none}
+  .panel{padding:12px}
+  .fields{grid-template-columns:1fr}
+  .check{grid-template-columns:1fr;gap:8px}
+  .choices{grid-template-columns:repeat(3,1fr)}
+  .choices label{padding:0 4px;font-size:.88rem}
+  .grid{gap:3px}
+  .day{min-height:54px;padding:4px;align-items:center;gap:4px;border-radius:8px}
+  .day .n{font-size:.95rem}
+  .chip,.more{display:none}
+  .dots{display:flex;justify-content:center}
+  .cal-head button{min-width:46px;min-height:44px}
+  button{min-height:46px}
+  button.danger{min-height:40px}
+  .fab{display:block;position:fixed;inset-inline-start:max(16px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border-radius:28px;padding:0 22px;min-height:54px;box-shadow:0 6px 18px rgba(0,0,0,.28);font-size:1rem}
+  .fab[hidden]{display:none}
+  .actions{position:sticky;bottom:0;background:var(--surface);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));margin-top:10px;border-top:1px solid var(--line)}
+  .actions button[type=submit]{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.who{display:flex;gap:8px;align-items:center;font-weight:700}
+.who button{color:#fff;border-color:rgba(255,255,255,.45);padding:6px 12px;min-height:36px}
+.login{max-width:420px;width:100%;margin:10px auto}
+.pbadge{background:var(--bad);color:#fff;border-radius:10px;padding:0 7px;margin-inline-start:6px;font-size:.75rem;display:inline-block;line-height:18px}
+.link{background:none;border:0;color:var(--accent);padding:6px 0;min-height:0;text-decoration:underline;font-weight:500}
+.okmsg{color:var(--ok);font-weight:700;margin-top:8px}
+
+.placeRow{display:flex;gap:8px}.placeRow input{flex:1;min-width:0}.placeRow button{white-space:nowrap}
+.bdach{border:1px solid var(--line);border-radius:12px;margin-top:16px;overflow:hidden}
+.bdach>summary,.sec>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:52px;padding:0 16px}
+.bdach>summary{font:600 1.05rem var(--f-display);background:var(--bg)}
+.sec>summary{font:600 .98rem var(--f-display);border-top:1px solid var(--line)}
+.bdach>summary::-webkit-details-marker,.sec>summary::-webkit-details-marker{display:none}
+summary .cnt::after{content:' ▾';display:inline-block;transition:transform .15s}
+details[open]>summary .cnt::after{transform:rotate(180deg)}
+.cnt{font:500 .85rem var(--f-body);color:var(--muted)}
+.cnt.done{color:var(--ok);font-weight:700}
+.sec .check{padding-inline:16px}
+.sec .check:first-of-type{border-top:0}
+.sec.miss>summary{color:var(--bad)}
+.codebox{font:700 1.2rem var(--f-display);letter-spacing:.12em;direction:ltr;display:inline-block;background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:4px 10px}
+.codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+.codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
+#printArea{display:none}
+@media print{
+  body>*:not(#printArea),.wrap{display:none!important}
+  #printArea{display:block!important;background:#fff;color:#000;padding:0}
+  #printArea h2{font:700 16pt var(--f-display);margin:0 0 10px}
+  #printArea .codes{grid-template-columns:repeat(2,1fr);gap:0}
+  #printArea .slip{border:1px dashed #666;border-radius:0;padding:12px;page-break-inside:avoid;color:#000}
+  #printArea .codebox{background:#fff;border-color:#000;font-size:20pt}
+}
+</style>
+
+</head><body>
+<div class="wrap" lang="he">
+  <header>
+    <div>
+      <h1>יומן בד״ח רחפנים</h1>
+      <span class="sync" id="sync" role="status"><i></i><span>מתחבר…</span></span>
+    </div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <section id="loginView" class="panel login" hidden>
+    <h3>כניסה</h3>
+    <form id="classForm" novalidate hidden>
+      <label for="ccode">קוד כיתה</label>
+      <input id="ccode" autocomplete="off" autocapitalize="characters" maxlength="12" style="direction:ltr;text-align:right">
+      <p class="meta">את קוד הכיתה מקבלים מהמנהל.</p>
+      <div id="cerr" class="err" role="alert"></div>
+      <div class="actions"><button type="submit" id="cbtn">המשך</button></div>
+    </form>
+    <form id="loginForm" novalidate>
+      <p class="meta" style="margin:0 0 4px"><b id="className"></b> · <button type="button" class="link" id="changeClass">החלפת כיתה</button></p>
+      <label for="lname">מי אתם?</label>
+      <select id="lname" required><option value="">בחרו את השם שלכם</option></select>
+      <div id="scWrap" hidden>
+        <label for="lsc">קוד חד-פעמי מהמנהל</label>
+        <input id="lsc" autocomplete="off" autocapitalize="characters" maxlength="12" style="direction:ltr;text-align:right">
+      </div>
+      <label for="lpin" id="lpinL">קוד אישי (4 עד 6 ספרות)</label>
+      <input id="lpin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" required>
+      <div id="pin2wrap" hidden>
+        <label for="lpin2">אימות הקוד</label>
+        <input id="lpin2" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
+      </div>
+      <p class="meta" id="lhint"></p>
+      <div id="lerr" class="err" role="alert"></div>
+      <div class="actions"><button type="submit" id="lbtn">כניסה</button></div>
+      <p><button type="button" class="link" id="notListed">אני לא ברשימה</button></p>
+    </form>
+    <form id="reqForm" novalidate hidden>
+      <p class="meta">מנהל יקבל הודעה ויאשר או ידחה. אחרי האישור נכנסים עם השם והקוד שבחרתם.</p>
+      <label for="rname">שם מלא</label>
+      <input id="rname" autocomplete="off" maxlength="40">
+      <label for="rpin">בחרו קוד אישי (4 עד 6 ספרות)</label>
+      <input id="rpin" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
+      <label for="rpin2">אימות הקוד</label>
+      <input id="rpin2" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
+      <label for="rnote">הערה למנהל (לא חובה)</label>
+      <input id="rnote" autocomplete="off" maxlength="300" placeholder="למשל: מאיזו כיתה אתם">
+      <div id="rerr" class="err" role="alert"></div>
+      <div id="rok" class="okmsg" role="status"></div>
+      <div class="actions">
+        <button type="submit" id="rbtn">שליחת בקשה</button>
+        <button type="button" class="ghost" id="reqStatus">בדיקת סטטוס</button>
+        <button type="button" class="link" id="reqBack">חזרה לכניסה</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="calView" style="display:none">
+    <div class="panel wxcard" id="wxCard">
+      <div class="wxhead">
+        <button type="button" class="link" id="wxPlaceBtn" aria-label="שינוי מיקום התחזית">📍 <span id="wxPlace">בחרו מיקום</span></button>
+        <span class="meta" id="wxStamp" role="status"></span>
+        <button type="button" class="ghost" id="wxRefresh" aria-label="רענון מזג אוויר" hidden>⟳</button>
+      </div>
+      <div id="wxSetup" hidden>
+        <div class="wxsetrow">
+          <button type="button" id="wxHere">המיקום שלי</button>
+          <form id="wxCityForm" novalidate class="wxcityf"><input id="wxCity" maxlength="60" autocomplete="off" placeholder="או הקלידו עיר / ישוב" aria-label="עיר או ישוב"><button type="submit" class="ghost" id="wxCitySet">חיפוש</button></form>
+        </div>
+        <div class="meta" id="wxMsg2" role="status"></div>
+      </div>
+      <div id="wxBody" aria-live="polite"></div>
+    </div>
+    <button type="button" class="ghost calbtn" id="calToggle" aria-expanded="false" aria-controls="calPanel">📅 יומן וסינון</button>
+    <div class="panel" id="calPanel" hidden>
+      <div class="filters">
+        <select id="fPilot" aria-label="סינון לפי מטיס"><option value="">כל המטיסים</option></select>
+        <select id="fModel" aria-label="סינון לפי רחפן"><option value="">כל הרחפנים</option></select>
+        <button type="button" class="ghost" id="exportBtn">ייצוא</button>
+        <div class="meta" id="fInfo"></div>
+      </div>
+      <div class="exportbox" id="exportBox" hidden>
+        <span class="meta">כל הטיסות לפי הסינון הנוכחי:</span>
+        <button type="button" id="csvBtn">הורדת CSV (אקסל)</button>
+        <button type="button" class="ghost" id="printLogBtn">הדפסה / PDF</button>
+        <button type="button" class="ghost" id="copyCsvBtn">העתקת הנתונים</button>
+        <textarea id="csvBox" readonly hidden></textarea>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:12px 0">
+      <div class="cal-head">
+        <div class="nav">
+          <button class="ghost" id="nextM" type="button" aria-label="חודש הבא">›</button>
+          <button class="ghost" id="todayB" type="button">היום</button>
+          <button class="ghost" id="prevM" type="button" aria-label="חודש קודם">‹</button>
+        </div>
+        <h2 id="monthTitle"></h2>
+      </div>
+      <div class="grid" id="dows"></div>
+      <div class="grid" id="days" style="margin-top:4px"></div>
+      <div class="legend">
+        <span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>מאושר להמראה</span>
+        <span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>לא מאושר</span>
+        <span><i style="background:var(--line)"></i>בוטל</span>
+      </div>
+    </div>
+    <div class="panel" id="detail"></div>
+  </section>
+
+  <section id="adminView" class="panel" hidden>
+    <div class="row"><h3 style="margin:0">ניהול</h3><button type="button" class="ghost" id="adminBack">חזרה ליומן</button></div>
+    <h4 class="sec-title">הכיתה</h4>
+    <div class="row"><span>כיתה: <b id="admClass"></b></span><span>קוד כיתה: <span class="codebox" id="admCode"></span></span></div>
+    <div class="actions"><button type="button" class="danger" id="rotateBtn">החלפת קוד כיתה</button></div>
+    <h4 class="sec-title">בקשות הצטרפות</h4>
+    <div id="reqList"></div>
+    <h4 class="sec-title">משתמשים</h4>
+    <div id="userList"></div>
+    <div id="adminMsg" class="meta" role="status" style="margin-top:10px"></div>
+    <h4 class="sec-title">קודים ראשוניים</h4>
+    <p class="meta">כל תלמיד מקבל קוד חד-פעמי (תקף 7 ימים) שבעזרתו הוא פותח את החשבון שלו. בלי הקוד אי אפשר לתפוס שם של מישהו אחר.</p>
+    <div class="actions"><button type="button" id="genBtn">צור קודים למי שעוד לא נכנס</button><button type="button" class="ghost" id="printBtn">הדפס קודים</button></div>
+    <div id="codesOut"></div>
+    <details class="bdach" style="margin-top:16px"><summary><span>כיתה חדשה</span><span class="cnt"></span></summary>
+      <form id="newClassForm" novalidate style="padding:0 16px 16px">
+        <label for="ncName">שם הכיתה</label><input id="ncName" maxlength="40" autocomplete="off">
+        <label for="ncNames">שמות התלמידים, שם בכל שורה (הראשון יהיה מנהל הכיתה)</label>
+        <textarea id="ncNames" rows="6"></textarea>
+        <label for="ncPin">הקוד שלכם לאישור</label>
+        <input id="ncPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
+        <div id="ncErr" class="err" role="alert"></div>
+        <div class="actions"><button type="submit" id="ncGo">יצירת כיתה</button></div>
+      </form>
+    </details>
+    <h4 class="sec-title">איפוס</h4>
+    <button type="button" class="danger" id="resetBtn">איפוס כל האפליקציה</button>
+    <form id="resetForm" novalidate hidden>
+      <p class="alert">פעולה זו מוחקת את כל הטיסות והבקשות של הכיתה, מאפסת את הקוד האישי של כולם חוץ מכם, ומנפיקה להם קודים חד-פעמיים חדשים. אי אפשר לבטל. כולם יתנתקו. כיתות אחרות לא נפגעות.</p>
+      <label for="rstPin">הקלידו את הקוד שלכם כדי לאשר</label>
+      <input id="rstPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
+      <div id="rstErr" class="err" role="alert"></div>
+      <div class="actions"><button type="submit" class="danger" id="rstGo">אפס הכול</button><button type="button" class="ghost" id="rstCancel">ביטול</button></div>
+    </form>
+  </section>
+  <div id="printArea"></div>
+  <button id="fab" class="fab" type="button" hidden>+ טיסה חדשה</button>
+  <section id="formView" class="panel" hidden>
+    <h3 id="formTitle">בד״ח חדש – בדיקות לפני הטסת רחפן</h3>
+    <form id="form" novalidate>
+      <div class="fields">
+        <div style="grid-column:1/-1"><label for="pilot">שם המטיס/ה *</label>
+          <select id="pilot" required></select></div>
+        <div><label for="model">דגם הרחפן *</label>
+          <select id="model" required></select>
+          <input id="modelOther" maxlength="100" autocomplete="off" placeholder="הקלידו את שם הרחפן המלא" hidden style="margin-top:8px"></div>
+        <div><label for="place">מיקום ההטסה *</label>
+          <div class="placeRow"><input id="place" required autocomplete="off" placeholder="כתבו מקום"><button type="button" class="ghost" id="geoBtn">מיקום נוכחי</button></div>
+          <div id="geoMsg" class="meta" role="status"></div>
+          <button type="button" class="ghost" id="wxBtn" style="margin-top:6px">בדיקת מזג אוויר</button>
+          <div id="wxMsg" role="status"></div></div>
+        <div><label for="date">תאריך הטיסה *</label><input id="date" type="date" required></div>
+        <div><label for="time">שעת הטיסה *</label><input id="time" type="time" required></div>
+      </div>
+      <details id="bdach" class="bdach">
+        <summary><span>בד״ח – בדיקות לפני טיסה</span><span class="cnt" id="bdachCnt">0/0</span></summary>
+        <div id="sections"></div>
+      </details>
+      <h4 class="sec-title">סיכום ואישור</h4>
+      <p class="alert">אם בדיקה חיונית אינה תקינה אין להמריא עד לתיקון הבעיה. סימון הטופס אינו מחליף עמידה בחוק ובנהלי הבטיחות.</p>
+      <label for="comments">הערות / ליקויים / פעולות תיקון</label>
+      <textarea id="comments"></textarea>
+      <label for="decision">החלטה *</label>
+      <select id="decision" required>
+        <option value="">בחרו החלטה</option>
+        <option value="approved">מאושר להמראה – כל הבדיקות החיוניות תקינות</option>
+        <option value="rejected">לא מאושר להמראה – נדרש טיפול</option>
+        <option value="canceled">הטיסה בוטלה</option>
+      </select>
+      <label class="confirm"><input type="checkbox" id="confirm" required> אני מאשר/ת שביצעתי את הבדיקות וסימנתי תשובות אמיתיות *</label>
+      <div id="formErr" class="err" role="alert"></div>
+      <div class="actions">
+        <button type="submit" id="saveBtn">שמירה ביומן</button>
+        <button type="button" class="ghost" id="cancelBtn">ביטול</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script>
+const MODEL_GROUPS=[
+ ['DJI – Mini',['Mini SE','Mini 2','Mini 2 SE','Mini 3','Mini 3 Pro','Mini 4K','Mini 4 Pro','Mini 5 Pro'],'DJI '],
+ ['DJI – Air ו-Mavic',['Mavic 2 Zoom','Air 2S','Air 3','Air 3S','Mavic Air 2','Mavic 3','Mavic 3 Classic','Mavic 3 Pro','Mavic 3 Pro Cine','Mavic 4 Pro'],'DJI '],
+ ['DJI – FPV וצילום',['Avata','Avata 2','Avata 360','FPV','Neo','Neo 2','Flip','Lito X1'],'DJI '],
+ ['DJI – מקצועי',['Mavic 3 Enterprise','Mavic 3 Thermal','Mavic 3 Multispectral','Matrice 30','Matrice 30T','Matrice 300 RTK','Matrice 350 RTK','Matrice 4E','Matrice 4T','Matrice 4D','Matrice 4TD','Matrice 400'],'DJI '],
+ ['DJI – חינוכי',['Tello','Tello EDU','RoboMaster TT'],'DJI '],
+ ['Autel',['EVO Nano+','EVO Lite+','EVO II Pro V3','EVO Max 4T'],'Autel '],
+ ['Parrot',['Anafi','Anafi Ai','Anafi USA'],'Parrot '],
+ ['Skydio',['2+','X10'],'Skydio '],
+ ['Potensic',['Atom SE','Atom 2','Dreamer'],'Potensic '],
+ ['Holy Stone',['HS100','HS110D','HS720E'],'Holy Stone '],
+ ['FPV קטן / בנייה עצמית',['BetaFPV Cetus','BetaFPV Meteor75','Emax Tinyhawk','DIY / בנייה עצמית'],'']
+];
+const SECTIONS=[['תקינות הרחפן',[['battery','סוללה טעונה, תקינה, אינה נפוחה ומחוברת היטב'],['body','גוף הרחפן ללא שברים, סדקים או חלקים רופפים'],['props','הפרופלורים תקינים, מהודקים ונעים ללא הפרעה'],['motors','המנועים תקינים ונקיים ממכשולים'],['camera','המצלמה והגימבל תקינים, העדשה נקייה ומגן הגימבל הוסר'],['sensors','החיישנים ומערכת מניעת המכשולים תקינים ומוגדרים'],['guards','מגני פרופלורים מותקנים אם נדרשים'],['weight','משקל הרחפן, המטען והאיזון תקינים'],['memory','כרטיס הזיכרון תקין ויש מספיק מקום אחסון']]],['תקשורת והגדרות',[['controller','השלט תקין ומחובר לרחפן'],['app','האפליקציה מחוברת ואין הודעות שגיאה שלא טופלו'],['gps','קליטת GNSS/GPS מספקת לפי הוראות היצרן'],['home','נקודת הבית (Home Point) נקבעה במיקום בטוח'],['rth','הגדרות חזרה הביתה (RTH), לרבות גובה, מתאימות לשטח'],['mode','מצב הטיסה והגדרות הבטיחות נבדקו'],['calibration','כיול בוצע אם נדרש על פי היצרן']]],['סביבה ותכנון',[['weather','מזג האוויר מתאים להוראות היצרן'],['wind','מהירות הרוח והמשבים מתאימים לדגם ולמשימה'],['takeoff','משטח ההמראה והנחיתה יציב, פנוי ובטוח'],['sand','משטח נחיתה מתאים זמין אם הקרקע חולית או מאובקת'],['obstacles','אין מכשולים מסוכנים במסלול הטיסה'],['people','נשמר מרחק בטיחות נדרש מאנשים שאינם משתתפים'],['animals','נבדקה נוכחות בעלי חיים בסביבה'],['aircraft','נבדקה תנועת כלי טיס ורחפנים אחרים'],['visual','ניתן לשמור קשר עין כנדרש במהלך הטיסה'],['emergency','נקבעה תוכנית פעולה ונחיתה במקרה חירום']]],['חוקיות וכשירות',[['airspace','נבדקו מגבלות המרחב האווירי, פרסומים והודעות רלוונטיות (כולל NOTAM לפי הצורך)'],['restricted','נבדקה קרבה לשדות תעופה, אזורים צבאיים ואזורים מוגבלים'],['license','רישיון/הסמכה, רישום הרחפן ופיקוח נדרש נבדקו בהתאם לדין'],['permit','קיימים האישורים הנדרשים להפעלה, אם נדרשים'],['fitness','המטיס כשיר, ערני ואינו תחת השפעת אלכוהול או חומרים משכרים'],['hazard','אין מטען מסוכן או אסור על הרחפן'],['gear','ציוד נלווה נדרש וסוללות חלופיות נבדקו']]]];
+const LABELS=Object.fromEntries(SECTIONS.flatMap(s=>s[1]));
+// דגמים בלי מגני פרופלורים (בדיקת "מגנים" נקבעת לבד כלא רלוונטית): Mavic, Air, Matrice. להוספת דגם: הוסיפו לביטוי (וגם ב-Code.gs).
+const NO_GUARD=/mavic|\bair\b|matrice/i;
+function currentModel(){return $('model').value==='__other'?$('modelOther').value:$('model').value}
+function applyModelRules(){
+  const row=document.querySelector('input[name="c_guards"]').closest('.check');
+  const radios=row.querySelectorAll('input');
+  const noG=NO_GUARD.test(currentModel());
+  let note=row.querySelector('.autonote');
+  if(noG){
+    radios.forEach(r=>{r.checked=r.value==='לא רלוונטי';r.disabled=true});row.dataset.auto='1';
+    if(!note){note=el('div','meta autonote','אין מגני פרופלורים בדגם הזה, לכן הבדיקה נקבעה אוטומטית כלא רלוונטית.');note.style.gridColumn='1/-1';row.append(note)}
+  }else if(row.dataset.auto==='1'){
+    radios.forEach(r=>{r.checked=false;r.disabled=false});row.dataset.auto='';if(note)note.remove();
+  }
+  updateProg();
+}
+const DECISION={approved:['מאושר להמראה','ok'],rejected:['לא מאושר','bad'],canceled:['בוטל','cancel']};
+const DOW=['א','ב','ג','ד','ה','ו','ש'];
+
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+
+let flights=[], allNames=[], token=null, uid=null, canEdit=false, editMin=15, editingId=null, wxText='';
+let fPilot='', fModel='';
+const now=new Date();
+let viewY=now.getFullYear(), viewM=now.getMonth(), sel=iso(now);
+
+// ---------- static form pieces
+(function buildForm(){
+  const ms=$('model');
+  const ph=document.createElement('option');ph.value='';ph.textContent='בחרו דגם';ms.append(ph);
+  for(const [label,items,prefix] of MODEL_GROUPS){
+    const og=document.createElement('optgroup');og.label=label;
+    for(const it of items){const o=document.createElement('option');o.value=prefix+it;o.textContent=prefix+it;og.append(o)}
+    ms.append(og);
+  }
+  const oo=document.createElement('option');oo.value='__other';oo.textContent='אחר (הקלידו ידנית)';ms.append(oo);
+  ms.addEventListener('change',()=>{const o=ms.value==='__other';$('modelOther').hidden=!o;$('modelOther').required=o;if(o)$('modelOther').focus();applyModelRules()});
+  $('modelOther').addEventListener('input',applyModelRules);
+  const root=$('sections');
+  SECTIONS.forEach(([title,items],si)=>{
+    const sec=document.createElement('details');sec.className='sec';sec.dataset.si=si;
+    const sum=document.createElement('summary');
+    sum.append(el('span',null,title),el('span','cnt','0/'+items.length));
+    sec.append(sum);
+    for(const [id,label] of items){
+      const row=el('div','check');row.append(el('b',null,label));
+      const ch=el('div','choices');
+      for(const v of ['תקין','לא תקין','לא רלוונטי']){
+        const lab=document.createElement('label');const r=document.createElement('input');
+        r.type='radio';r.name='c_'+id;r.value=v;
+        lab.className=v==='תקין'?'ok':v==='לא תקין'?'bad':'na';lab.append(r,document.createTextNode(v));ch.append(lab)}
+      row.append(ch);sec.append(row)}
+    root.append(sec);
+  });
+})();
+
+// ---------- calendar
+function buildDows(){const g=$('dows');for(const d of DOW)g.append(el('div','dow',d))}
+buildDows();
+
+function visible(){return flights.filter(f=>(!fPilot||f.pilot===fPilot)&&(!fModel||f.model===fModel))}
+function syncFilters(){
+  const fill=(sel,key,cur,all)=>{
+    const vals=Array.from(new Set(flights.map(f=>f[key]).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'he'));
+    if(cur&&vals.indexOf(cur)<0)vals.push(cur);
+    const sig=vals.join('|');if(sel.dataset.sig===sig)return;sel.dataset.sig=sig;
+    sel.replaceChildren();const o0=document.createElement('option');o0.value='';o0.textContent=all;sel.append(o0);
+    vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.append(o)});sel.value=cur;
+  };
+  fill($('fPilot'),'pilot',fPilot,'כל המטיסים');fill($('fModel'),'model',fModel,'כל הרחפנים');
+  const n=visible().length;
+  $('fInfo').textContent=(fPilot||fModel)?'מוצגות '+n+' מתוך '+flights.length+' טיסות (הסינון פעיל)':'';
+}
+$('fPilot').addEventListener('change',()=>{fPilot=$('fPilot').value;render()});
+$('fModel').addEventListener('change',()=>{fModel=$('fModel').value;render()});
+function render(){
+  const first=new Date(viewY,viewM,1);
+  $('monthTitle').textContent=first.toLocaleDateString('he-IL',{month:'long',year:'numeric'});
+  const grid=$('days');grid.replaceChildren();
+  const start=new Date(viewY,viewM,1-first.getDay());
+  syncFilters();
+  const byDate={};for(const f of visible())(byDate[f.date]=byDate[f.date]||[]).push(f);
+  const todayIso=iso(new Date());
+  for(let i=0;i<42;i++){
+    const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    if(i>=35&&d.getMonth()!==viewM)break;
+    const k=iso(d);
+    const b=el('button','day');b.type='button';
+    if(d.getMonth()!==viewM)b.classList.add('off');
+    if(k===todayIso)b.classList.add('today');
+    if(k===sel)b.classList.add('sel');
+    b.append(el('span','n',String(d.getDate())));
+    const list=(byDate[k]||[]).sort((a,c)=>(a.time||'').localeCompare(c.time||''));
+    list.slice(0,2).forEach(f=>{b.append(el('span','chip '+(f.voided?'cancel':(DECISION[f.decision]||['','cancel'])[1]),(f.time||'')+' '+(f.pilot||'')))});
+    if(list.length>2)b.append(el('span','more','+'+(list.length-2)+' נוספות'));
+    if(list.length){const dots=el('span','dots');list.slice(0,6).forEach(f=>dots.append(el('i',(f.voided?'cancel':(DECISION[f.decision]||['','cancel'])[1]))));b.append(dots)}
+    b.setAttribute('aria-label',d.toLocaleDateString('he-IL',{day:'numeric',month:'long'})+', '+list.length+' טיסות');
+    b.addEventListener('click',()=>{sel=k;if(d.getMonth()!==viewM){viewM=d.getMonth();viewY=d.getFullYear()}render()});
+    grid.append(b);
+  }
+  renderDetail(byDate[sel]||[]);
+}
+
+function renderDetail(list){
+  const p=$('detail');p.replaceChildren();
+  const d=new Date(sel+'T00:00:00');
+  p.append(el('h3',null,d.toLocaleDateString('he-IL',{weekday:'long',day:'numeric',month:'long',year:'numeric'})));
+  if(!list.length){
+    const e=el('p','empty','אין טיסות מתועדות ביום הזה.');p.append(e);
+    const b=el('button',null,'+ הוספת טיסה ליום הזה');b.type='button';b.addEventListener('click',()=>openForm(sel));p.append(b);return}
+  list.sort((a,c)=>(a.time||'').localeCompare(c.time||'')).forEach(f=>{
+    const box=el('div','flight'+(f.voided?' voided':''));
+    const r1=el('div','row');
+    const dec=f.voided?['הרישום בוטל','bad']:(DECISION[f.decision]||['','']);
+    r1.append(el('b',null,(f.time||'')+'  ·  '+(f.pilot||'')),el('span','badge '+dec[1],dec[0]));
+    box.append(r1);
+    box.append(el('div','meta',[f.model,f.place,f.group].filter(Boolean).join('  ·  ')));
+    const fails=Object.entries(f.checks||{}).filter(([,v])=>v==='לא תקין').map(([k])=>LABELS[k]||k);
+    if(fails.length){const fb=el('div','fails','בדיקות שסומנו כלא תקינות:');const ul=el('ul');fails.forEach(t=>ul.append(el('li',null,t)));fb.append(ul);box.append(fb)}
+    if(f.comments)box.append(el('div',null,f.comments));
+    if(f.weather)box.append(el('div','meta','מזג אוויר: '+f.weather));
+    if(f.editedAt)box.append(el('div','meta','נערך '+new Date(f.editedAt).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})));
+    if(f.voided){
+      box.append(el('div','voidnote','הרישום בוטל על ידי '+(f.voided.by||'?')+(f.voided.at?' ב-'+new Date(f.voided.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'')+'. סיבה: '+f.voided.reason));
+      if(canEdit){const del=armBtn('מחיקה סופית','danger',()=>removeFlight(f.id));box.append(del)}
+    }else if(canEdit||(uid&&(f.by===uid||f.pilot===uid))){
+      const vb=el('button','danger','ביטול הרישום');vb.type='button';
+      vb.addEventListener('click',()=>{
+        vb.hidden=true;
+        const form=el('div','voidform');const inp=document.createElement('input');inp.maxLength=300;inp.placeholder='סיבת הביטול (חובה)';inp.setAttribute('aria-label','סיבת הביטול');
+        const ok=el('button','danger','אישור ביטול');ok.type='button';const no=el('button','ghost','חזרה');no.type='button';
+        const msg=el('div','err');msg.setAttribute('role','alert');
+        no.addEventListener('click',()=>{form.remove();vb.hidden=false});
+        ok.addEventListener('click',async()=>{
+          const reason=inp.value.trim();
+          if(reason.length<3){msg.textContent='כתבו סיבה לביטול.';return}
+          ok.disabled=true;
+          try{const o=await call('voidFlight',{id:f.id,reason});
+            if(o.error){msg.textContent=({FORBIDDEN:'אין הרשאה לבטל את הרישום הזה.',ALREADY:'הרישום כבר בוטל.',BAD_REASON:'כתבו סיבה לביטול.'})[o.error]||'הביטול נכשל.';ok.disabled=false;return}
+            await refresh();
+          }catch(ex){msg.textContent='הביטול נכשל. נסו שוב.';ok.disabled=false}
+        });
+        form.append(inp,ok,no);box.append(form,msg);inp.focus();
+      });
+      box.append(vb)}
+    if(!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)&&Date.now()-(f.createdAt||0)<=editMin*60000))){
+      const eb=el('button','ghost','עריכה');eb.type='button';eb.addEventListener('click',()=>openForm(null,f));box.append(eb)}
+    p.append(box)});
+  const add=el('button','ghost','+ הוספת טיסה ליום הזה');add.type='button';add.style.marginTop='8px';
+  add.addEventListener('click',()=>openForm(sel));p.append(add);
+}
+
+$('prevM').addEventListener('click',()=>{viewM--;if(viewM<0){viewM=11;viewY--}render()});
+$('nextM').addEventListener('click',()=>{viewM++;if(viewM>11){viewM=0;viewY++}render()});
+$('todayB').addEventListener('click',()=>{const n=new Date();viewY=n.getFullYear();viewM=n.getMonth();sel=iso(n);render()});
+
+// ---------- form
+function openForm(dateIso,flight){
+  if(!token||!uid)return;            // אי אפשר לפתוח טופס בלי להתחבר
+  $('form').reset();$('formErr').textContent='';
+  const n=new Date();
+  const pl=$('pilot');pl.replaceChildren();
+  (allNames.indexOf(uid)>=0?allNames:[uid].concat(allNames)).forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n+(n===uid?' (אני)':'');pl.append(o)});
+  pl.value=uid;pl.disabled=false;
+  if(!allNames.length)refresh();
+  $('date').value=dateIso||iso(n);
+  $('time').value=pad(n.getHours())+':'+pad(n.getMinutes());
+  $('calView').style.display='none';$('formView').hidden=false;$('addBtn').hidden=true;
+  $('modelOther').hidden=true;$('modelOther').required=false;$('geoMsg').textContent='';
+  $('bdach').open=false;document.querySelectorAll('#sections .sec').forEach(x=>{x.open=false;x.classList.remove('miss')});
+  $('fab').hidden=true;updateProg();
+  editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
+  if(flight)fillForm(flight);
+  window.scrollTo(0,0);
+}
+function fillForm(f){
+  editingId=f.id;$('formTitle').textContent='עריכת בד״ח';$('saveBtn').textContent='שמירת שינויים';
+  const pl=$('pilot');if(![...pl.options].some(o=>o.value===f.pilot)){const o=document.createElement('option');o.value=f.pilot;o.textContent=f.pilot;pl.append(o)}
+  pl.value=f.pilot;
+  const ms=$('model');
+  if([...ms.options].some(o=>o.value===f.model&&o.value!=='__other')){ms.value=f.model;$('modelOther').hidden=true;$('modelOther').required=false}
+  else{ms.value='__other';$('modelOther').hidden=false;$('modelOther').required=true;$('modelOther').value=f.model}
+  $('place').value=f.place||'';$('date').value=f.date;$('time').value=f.time;$('decision').value=f.decision;$('comments').value=f.comments||'';
+  for(const [id,v] of Object.entries(f.checks||{})){const r=document.querySelector('input[name="c_'+id+'"][value="'+v+'"]');if(r)r.checked=true}
+  wxText=f.weather||'';if(wxText){const m=el('div','wx ok','מזג אוויר שנשמר: '+wxText);$('wxMsg').append(m)}
+  applyModelRules();updateProg();
+}
+function closeForm(){editingId=null;$('fab').hidden=!token;$('formView').hidden=true;$('calView').style.display='contents';$('addBtn').hidden=false}
+$('addBtn').addEventListener('click',()=>openForm());
+$('fab').addEventListener('click',()=>openForm());
+$('geoBtn').addEventListener('click',()=>{
+  const st=$('geoMsg'),btn=$('geoBtn');st.textContent='';
+  if(!navigator.geolocation){st.textContent='המכשיר לא תומך במיקום. כתבו את המקום ידנית.';return}
+  btn.disabled=true;st.textContent='מבקש גישה למיקום…';
+  try{
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      const lat=pos.coords.latitude.toFixed(5),lng=pos.coords.longitude.toFixed(5);
+      let addr='';try{const o=await call('geocode',{lat:lat,lng:lng});addr=(o&&o.address)||''}catch(e){}
+      $('place').value=(addr?addr+' ':'')+'('+lat+', '+lng+')';
+      st.textContent='המיקום נוסף. אפשר לערוך אותו.';btn.disabled=false;
+    },err=>{
+      st.textContent=(err&&err.code===1)?'לא אישרתם גישה למיקום. אפשר לכתוב את המקום ידנית.':'לא הצלחנו לקבל מיקום. אפשר לכתוב את המקום ידנית.';
+      btn.disabled=false;
+    },{enableHighAccuracy:false,timeout:10000,maximumAge:60000});
+  }catch(e){st.textContent='לא הצלחנו לקבל מיקום. אפשר לכתוב את המקום ידנית.';btn.disabled=false}
+});
+function updateProg(){
+  let total=0,done=0;
+  document.querySelectorAll('#sections .sec').forEach((sec,i)=>{
+    const ids=SECTIONS[i][1].map(x=>x[0]);
+    const d=ids.filter(id=>document.querySelector('input[name="c_'+id+'"]:checked')).length;
+    total+=ids.length;done+=d;
+    const c=sec.querySelector('.cnt');c.textContent=d+'/'+ids.length;c.classList.toggle('done',d===ids.length);
+    if(d===ids.length)sec.classList.remove('miss');
+  });
+  const bc=$('bdachCnt');bc.textContent=done+'/'+total;bc.classList.toggle('done',done===total);
+}
+$('sections').addEventListener('change',updateProg);
+$('form').addEventListener('reset',()=>setTimeout(()=>{applyModelRules()},0));
+function setSync(live){
+  const s=$('sync');s.classList.toggle('live',live);
+  s.lastChild.textContent=live?'מסונכרן · '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'מתחבר…';
+}
+$('cancelBtn').addEventListener('click',closeForm);
+
+$('form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const err=$('formErr');err.textContent='';
+  const checks={};let missing=0;
+  for(const id of Object.keys(LABELS)){
+    const r=document.querySelector('input[name="c_'+id+'"]:checked');
+    if(r)checks[id]=r.value;else missing++}
+  const other=$('model').value==='__other';
+  const modelName=other?$('modelOther').value.trim():$('model').value;
+  const need=['pilot','model','place','date','time','decision'].filter(k=>!$(k).value.trim());
+  if(other&&modelName.length<2&&need.indexOf('model')<0)need.push('model');
+  if(missing){
+    $('bdach').open=true;let first=null;
+    document.querySelectorAll('#sections .sec').forEach((sec,i)=>{
+      const miss=SECTIONS[i][1].some(([id])=>!checks[id]);
+      sec.classList.toggle('miss',miss);if(miss){sec.open=true;first=first||sec}});
+    if(first)first.scrollIntoView({block:'center'});
+  }
+  if(need.length||missing||!$('confirm').checked){
+    err.textContent='חסרים שדות חובה'+(missing?': '+missing+' בדיקות לא סומנו':'')+(!$('confirm').checked?'. יש לסמן את האישור בסוף.':'.');
+    return}
+  const anyBad=Object.values(checks).includes('לא תקין');
+  if(anyBad&&$('decision').value==='approved'){err.textContent='סומנו בדיקות לא תקינות. אין לאשר המראה עד לתיקון.';return}
+  const f={pilot:$('pilot').value,model:modelName,place:$('place').value.trim(),
+    date:$('date').value,time:$('time').value,checks,comments:$('comments').value.trim(),decision:$('decision').value,
+    weather:wxText,by:uid||null,createdAt:Date.now()};
+  $('saveBtn').disabled=true;
+  try{
+    const o=editingId?await call('editFlight',{id:editingId,flight:f}):await call('addFlight',{flight:f});
+    if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
+    sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();
+    closeForm();await refresh();
+  }catch(ex){
+    if(!ex||ex.error!=='AUTH')err.textContent='השמירה נכשלה. בדקו חיבור ונסו שוב.';
+  }finally{$('saveBtn').disabled=false}
+});
+
+function store(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+let classCode=load('bdach_class')||'',clsName='',claimedSet=[];
+const API_URL=(window.BDACH_API||'').trim();
+function call(action,p){
+  const payload=JSON.stringify(Object.assign({action,token,code:classCode},p||{}));
+  const done=(r,res,rej)=>{let o;try{o=typeof r==='string'?JSON.parse(r):r}catch(e){return rej(e)}
+    if(o&&o.error==='AUTH'){logout();rej(o);return}res(o)};
+  return new Promise((res,rej)=>{
+    if(window.google&&google.script&&google.script.run){
+      google.script.run.withSuccessHandler(r=>done(r,res,rej)).withFailureHandler(rej).api(payload);return;
+    }
+    if(!API_URL){rej({error:'NO_SERVER'});return}
+    // text/plain = בקשה פשוטה, בלי preflight של CORS (Apps Script לא עונה ל-OPTIONS)
+    fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:payload,redirect:'follow'})
+      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+      .then(t=>done(t,res,rej)).catch(rej);
+  });
+}
+function showOffline(msg){const b=$('banner');b.textContent=msg;b.hidden=!msg}
+
+async function removeFlight(id){
+  try{const o=await call('deleteFlight',{id});if(o.error&&o.error!=='NOT_FOUND')showOffline('אפשר למחוק סופית רק טיסה שבוטלה, ורק מנהל.');await refresh()}
+  catch(ex){showOffline('המחיקה נכשלה.')}
+}
+
+let timer=null,busy=false,ver=null,lastPending=0,adminOpen=false;
+
+function applyMe(o){
+  if(typeof o.admin==='boolean'&&o.admin!==canEdit){canEdit=o.admin;if(!canEdit&&adminOpen)closeAdmin();render()}
+  $('whoName').textContent=uid+(clsName?' · '+clsName:'')+(canEdit?' · מנהל':'');
+  $('adminBtn').hidden=!canEdit;
+  const p=canEdit?(o.pending||0):0;
+  $('pendBadge').hidden=!p;$('pendBadge').textContent=p;
+  if(adminOpen&&p!==lastPending)loadAdmin();
+  lastPending=p;
+}
+async function refresh(){
+  if(!token||busy)return;busy=true;
+  try{
+    const o=await call('flights',{v:ver});
+    if(!o.same){flights=o.flights||[];allNames=o.names||[]}
+    if(o.className)clsName=o.className;
+    if(o.editMinutes)editMin=o.editMinutes;
+    ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same)render();
+  }catch(ex){
+    if(!ex||ex.error!=='AUTH'){setSync(false);$('sync').lastChild.textContent='אין חיבור';showOffline('אין חיבור לשרת. הנתונים יתעדכנו כשהחיבור יחזור.')}
+  }finally{busy=false}
+}
+function startPolling(){stopPolling();timer=setInterval(()=>{if(!document.hidden)refresh()},15000);startCard()}
+function stopPolling(){if(timer){clearInterval(timer);timer=null}stopCard()}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+
+/* ---- admin ---- */
+function openAdmin(){adminOpen=true;$('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=false;$('addBtn').hidden=true;$('fab').hidden=true;$('adminMsg').textContent='';loadAdmin();window.scrollTo(0,0)}
+function closeAdmin(){adminOpen=false;$('resetForm').hidden=true;$('resetBtn').hidden=false;$('adminView').hidden=true;if(token){$('calView').style.display='contents';$('addBtn').hidden=false;$('fab').hidden=false}}
+$('adminBtn').addEventListener('click',openAdmin);
+$('adminBack').addEventListener('click',closeAdmin);
+async function loadAdmin(){
+  try{const o=await call('adminData');if(o.error){$('adminMsg').textContent='אין הרשאה.';return}renderAdmin(o)}
+  catch(e){$('adminMsg').textContent='הטעינה נכשלה. נסו שוב.'}
+}
+function armBtn(label,cls,fn){
+  const b=el('button',cls,label);b.type='button';
+  b.addEventListener('click',()=>{
+    if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='לחצו שוב לאישור';setTimeout(()=>{if(b.isConnected){b.dataset.arm='';b.textContent=label}},4000);return}
+    fn()});
+  return b;
+}
+const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.'};
+let lastCodes=[];
+const fmtCode=c=>c&&c.length>3?c.slice(0,3)+'-'+c.slice(3):c||'';
+function showCodes(list,title){
+  lastCodes=list;const box=$('codesOut');box.replaceChildren();
+  if(!list.length){box.append(el('p','empty','אין קודים להצגה: כל התלמידים כבר נכנסו.'));return}
+  if(title)box.append(el('p','okmsg',title));
+  const g=el('div','codes');
+  list.forEach(c=>{const d=el('div','slip');d.append(el('b',null,c.name+(c.admin?' (מנהל)':'')),el('span','codebox',fmtCode(c.code)));g.append(d)});
+  box.append(g);
+}
+async function printCodes(){
+  const o=await adminAct('genCodes',{},'');
+  if(!o||!o.ok)return;
+  showCodes(o.codes);
+  const pa=$('printArea');pa.replaceChildren();
+  pa.append(el('h2',null,'יומן בד״ח רחפנים · '+$('admClass').textContent+' · קוד כיתה: '+$('admCode').textContent));
+  const g=el('div','codes');
+  o.codes.forEach(c=>{const d=el('div','slip');d.append(el('b',null,c.name),el('span','meta','קוד חד-פעמי (תקף 7 ימים):'),el('span','codebox',fmtCode(c.code)));g.append(d)});
+  pa.append(g);
+  loadAdmin();
+  if(o.codes.length)setTimeout(()=>window.print(),50);else $('adminMsg').textContent='כולם כבר נכנסו, אין מה להדפיס.';
+}
+async function adminAct(action,p,okMsg){
+  $('adminMsg').textContent='';
+  try{
+    const o=await call(action,p);
+    $('adminMsg').textContent=o.error?(ADMIN_ERR[o.error]||'הפעולה נכשלה.'):(okMsg||'בוצע.');
+    return o;
+  }catch(e){$('adminMsg').textContent='הפעולה נכשלה.';return {error:'FAIL'}}
+}
+function renderAdmin(o){
+  if(o.cls){$('admClass').textContent=o.cls.name;$('admCode').textContent=o.cls.code}
+  const rl=$('reqList');rl.replaceChildren();
+  if(!o.requests.length)rl.append(el('p','empty','אין בקשות ממתינות.'));
+  o.requests.forEach(r=>{
+    const box=el('div','flight');const row=el('div','row');
+    row.append(el('b',null,r.name),el('span','meta',new Date(r.createdAt).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})));
+    box.append(row);if(r.note)box.append(el('div','meta',r.note));
+    const act=el('div','row');
+    const yes=el('button',null,'אישור');yes.type='button';
+    yes.addEventListener('click',async()=>{await adminAct('decide',{id:r.id,approve:true},r.name+' אושר/ה.');await refresh();loadAdmin()});
+    const no=armBtn('דחייה','danger',async()=>{await adminAct('decide',{id:r.id,approve:false},'הבקשה של '+r.name+' נדחתה.');await refresh();loadAdmin()});
+    act.append(yes,no);box.append(act);rl.append(box);
+  });
+  const ul=$('userList');ul.replaceChildren();
+  o.users.forEach(u=>{
+    const box=el('div','flight');const row=el('div','row');
+    row.append(el('b',null,u.name+(u.name===uid?' (אתם)':'')),el('span','badge '+(u.admin?'ok':'cancel'),u.admin?'מנהל':(u.hasPin?'משתמש':'עוד לא נכנס')));
+    box.append(row);
+    if(u.code)box.append(el('div','meta','קוד חד-פעמי: '+fmtCode(u.code)+' · עד '+new Date(u.codeExp).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})));
+    if(u.name!==uid){
+      const act=el('div','row');
+      if(u.hasPin&&!u.admin)act.append(armBtn('העבר לו את הניהול','danger',async()=>{
+        const r=await adminAct('transferAdmin',{name:u.name},'');
+        if(r&&r.ok){canEdit=false;await refresh();closeAdmin();showOffline('הניהול הועבר ל'+u.name+'.')}else loadAdmin()}));
+      act.append(armBtn(u.admin?'הסר ניהול':'הוסף כמנהל','danger',async()=>{await adminAct('setAdmin',{name:u.name,admin:!u.admin},u.admin?'הניהול הוסר.':u.name+' הוא מנהל עכשיו.');await refresh();loadAdmin()}));
+      act.append(armBtn(u.hasPin?'אפס קוד':'קוד חדש','danger',async()=>{const r=await adminAct('resetPin',{name:u.name},u.hasPin?'הקוד של '+u.name+' אופס. מסרו לו את הקוד החד-פעמי החדש.':'הונפק קוד חדש ל'+u.name+'.');if(r&&r.code)showCodes([{name:u.name,code:r.code}],'קוד חד-פעמי חדש ל'+u.name);loadAdmin()}));
+      box.append(act);
+    }
+    ul.append(box);
+  });
+}
+
+$('genBtn').addEventListener('click',async()=>{const o=await adminAct('genCodes',{},'');if(o&&o.ok){showCodes(o.codes,'הקודים החד-פעמיים (תקפים 7 ימים). מוסרים לכל תלמיד את הקוד שלו.');$('adminMsg').textContent='';loadAdmin()}});
+$('printBtn').addEventListener('click',printCodes);
+$('rotateBtn').addEventListener('click',()=>{const b=$('rotateBtn');
+  if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='לחצו שוב לאישור';setTimeout(()=>{b.dataset.arm='';b.textContent='החלפת קוד כיתה'},4000);return}
+  b.dataset.arm='';b.textContent='החלפת קוד כיתה';
+  adminAct('rotateClass',{},'').then(o=>{if(o&&o.ok){classCode=o.code;store('bdach_class',o.code);$('adminMsg').textContent='קוד הכיתה הוחלף. מסרו את הקוד החדש לתלמידים שעוד לא נכנסו.';loadAdmin()}})});
+$('newClassForm').addEventListener('submit',async e=>{
+  e.preventDefault();const err=$('ncErr');err.textContent='';
+  const pin=$('ncPin').value.trim();
+  if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד שלכם הוא 4 עד 6 ספרות.';return}
+  $('ncGo').disabled=true;
+  try{
+    const o=await call('createClass',{name:$('ncName').value,names:$('ncNames').value,pin});
+    if(o.ok){
+      $('ncName').value='';$('ncNames').value='';$('ncPin').value='';
+      showCodes(o.codes,'הכיתה "'+o.cls.name+'" נוצרה. קוד הכיתה: '+o.cls.code+'. מסרו אותו לתלמידים, ואת הקוד האישי של כל אחד לו (הראשון הוא המנהל).');
+      $('adminMsg').textContent='';
+    }else err.textContent=ADMIN_ERR[o.error]==='קוד שגוי.'&&o.left!=null?'קוד שגוי. נשארו '+o.left+' ניסיונות.':(ADMIN_ERR[o.error]||'היצירה נכשלה.');
+  }catch(ex){if(!ex||ex.error!=='AUTH')err.textContent='היצירה נכשלה. נסו שוב.'}
+  finally{$('ncGo').disabled=false}
+});
+
+/* ---- איפוס מלא (דורש קוד מנהל) ---- */
+$('resetBtn').addEventListener('click',()=>{$('resetBtn').hidden=true;$('resetForm').hidden=false;$('rstPin').value='';$('rstErr').textContent='';$('rstPin').focus()});
+$('rstCancel').addEventListener('click',()=>{$('resetForm').hidden=true;$('resetBtn').hidden=false});
+$('resetForm').addEventListener('submit',async e=>{
+  e.preventDefault();const err=$('rstErr');err.textContent='';
+  const pin=$('rstPin').value.trim();
+  if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד הוא 4 עד 6 ספרות.';return}
+  $('rstGo').disabled=true;
+  try{
+    const o=await call('resetAll',{pin});
+    if(o.ok){$('resetForm').hidden=true;$('resetBtn').hidden=false;showCodes(o.codes,'הכיתה אופסה. הטיסות והבקשות נמחקו. מסרו לכל תלמיד את הקוד החד-פעמי החדש שלו.');$('adminMsg').textContent='';await refresh();loadAdmin();return}
+    err.textContent=({BAD:'קוד שגוי. נשארו '+o.left+' ניסיונות.',LOCKED:'נעול ל-'+o.minutes+' דקות אחרי יותר מדי ניסיונות.',FORBIDDEN:'רק מנהל יכול לאפס.'})[o.error]||'האיפוס נכשל.';
+  }catch(ex){if(!ex||ex.error!=='AUTH')err.textContent='האיפוס נכשל. נסו שוב.'}
+  finally{$('rstGo').disabled=false}
+});
+
+/* ---- מזג אוויר: תחזית (Open-Meteo, כולל רוח בגובה) + מדידה בפועל משדה תעופה קרוב (METAR) ---- */
+async function fetchJson(url,ms){
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),ms||9000);
+  try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error('http '+r.status);return await r.json()}finally{clearTimeout(t)}
+}
+function wxShow(text,cls){const b=$('wxMsg');b.replaceChildren();if(text){const d=el('div','wx '+(cls||''),text);b.append(d)}}
+/* רוח בגובה הטיסה (80 מ׳) חשובה יותר מרוח בקרקע. ספים כלליים, לא מגבלות יצרן. */
+function wxJudge(w){
+  const wind=Math.max(w.wind80||0,w.wind||0,w.obsWind||0),gust=Math.max(w.gust||0,w.obsGust||0);
+  if(wind>=35||gust>=40||(w.rain||0)>=1||w.code>=95)return['bad','תנאים לא מומלצים להמראה. אל תמריאו מעל מגבלות הדגם.'];
+  if(wind>=25||gust>=28||(w.rain||0)>0||w.t<=0||w.t>=38)return['warn','שימו לב: תנאים גבוליים. בדקו את מגבלות הדגם.'];
+  return['ok','תנאים נוחים לפי הנתונים.'];
+}
+function distKm(a,b,c,d){const R=6371,r=x=>x*Math.PI/180,dl=r(c-a),dn=r(d-b);const h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+async function nearestMetar(lat,lng){
+  const d=0.7;
+  const list=await fetchJson('https://aviationweather.gov/api/data/metar?format=json&bbox='+[lat-d,lng-d,lat+d,lng+d].map(x=>x.toFixed(3)).join(','),7000);
+  const nowS=Date.now()/1000;
+  const ok_=(Array.isArray(list)?list:[]).filter(m=>m&&typeof m.wspd==='number'&&m.obsTime&&nowS-m.obsTime<3*3600&&typeof m.lat==='number');
+  ok_.sort((a,b)=>distKm(lat,lng,a.lat,a.lon)-distKm(lat,lng,b.lat,b.lon));
+  const m=ok_[0];if(!m)return null;
+  return{id:m.icaoId,km:Math.round(distKm(lat,lng,m.lat,m.lon)),min:Math.max(0,Math.round((nowS-m.obsTime)/60)),dir:m.wdir,wind:Math.round(m.wspd*1.852),gust:m.wgst?Math.round(m.wgst*1.852):0};
+}
+$('wxBtn').addEventListener('click',async()=>{
+  const btn=$('wxBtn');wxText='';wxShow('');
+  const place=$('place').value.trim();
+  if(!place){wxShow('כתבו מקום או לחצו "מיקום נוכחי" קודם.','warn');return}
+  btn.disabled=true;wxShow('בודק מזג אוויר…','');
+  try{
+    let lat,lng;const m=place.match(/\((-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)/);
+    if(m){lat=+m[1];lng=+m[2]}
+    else{
+      const q=place.replace(/\(.*\)/,'').split(',')[0].trim();
+      const g=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?count=1&language=he&name='+encodeURIComponent(q));
+      const r=g&&g.results&&g.results[0];
+      if(!r){wxShow('לא מצאנו את המקום. לחצו "מיקום נוכחי" או כתבו שם של עיר.','warn');return}
+      lat=r.latitude;lng=r.longitude;
+    }
+    const H='temperature_2m,wind_speed_10m,wind_speed_80m,wind_gusts_10m,precipitation,weather_code';
+    const HC='temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation,weather_code';
+    const today=iso(new Date()),fdate=$('date').value||today;
+    const [w,obs]=await Promise.all([
+      fetchJson('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current='+HC+'&hourly='+H+'&forecast_days=7&timezone=auto&wind_speed_unit=kmh'),
+      fdate===today?nearestMetar(lat,lng).catch(()=>undefined):Promise.resolve(null)
+    ]);
+    const key=fdate+'T'+(($('time').value||'00:00').slice(0,2))+':00';
+    const hi=w.hourly&&w.hourly.time?w.hourly.time.indexOf(key):-1;
+    let d,when;
+    if(hi>=0){const X=w.hourly;d={t:X.temperature_2m[hi],wind:X.wind_speed_10m[hi],wind80:X.wind_speed_80m&&X.wind_speed_80m[hi],gust:X.wind_gusts_10m[hi],rain:X.precipitation[hi],code:X.weather_code[hi]};when='תחזית לשעה '+key.slice(11)}
+    else if(w.current){const C=w.current;const ci=w.hourly&&w.hourly.time?w.hourly.time.indexOf(hourKey(C.time)):-1;d={t:C.temperature_2m,wind:C.wind_speed_10m,wind80:ci>=0&&w.hourly.wind_speed_80m?w.hourly.wind_speed_80m[ci]:undefined,gust:C.wind_gusts_10m,rain:C.precipitation,code:C.weather_code};when='כעת (אין תחזית לתאריך ולשעה שבחרתם)'}
+    else throw new Error('no data');
+    if(obs){d.obsWind=obs.wind;d.obsGust=obs.gust}
+    const [lvl,verdict]=wxJudge(d);
+    const hasAlt=typeof d.wind80==='number';
+    const line='רוח בקרקע '+Math.round(d.wind)+' קמ״ש (משבים '+Math.round(d.gust)+')'+(hasAlt?', בגובה 80 מ׳ '+Math.round(d.wind80)+' קמ״ש':'')+', '+Math.round(d.t)+'°, '+((d.rain||0)>0?'גשם '+d.rain+' מ״מ':'ללא גשם');
+    let obsLine='';
+    if(obs)obsLine='מדידה בפועל ב-'+obs.id+' ('+obs.km+' ק״מ, לפני '+obs.min+' דק׳): רוח '+(obs.dir!=null?obs.dir+'° ':'')+obs.wind+' קמ״ש'+(obs.gust?', משבים '+obs.gust:'');
+    else if(fdate===today)obsLine='מדידה בפועל משדה תעופה קרוב לא זמינה.';
+    wxText=[line,when,obsLine&&obs?obsLine:'','Open-Meteo'].filter(Boolean).join(' · ').slice(0,300);
+    wxShow([line+' · '+when,obsLine,verdict+' זו הערכה כללית ולא מחליפה את מגבלות היצרן ואת ההחלטה שלכם בשטח.'].filter(Boolean).join('. '),lvl);
+  }catch(ex){wxShow('לא הצלחנו להביא מזג אוויר עכשיו. אפשר להמשיך בלי, ולבדוק ידנית.','warn')}
+  finally{btn.disabled=false}
+});
+
+/* ---- ייצוא היומן ---- */
+const CSV_HEAD=['תאריך','שעה','מטיס','רחפן','מקום','החלטה','בדיקות לא תקינות','הערות','מזג אוויר','רישום','נרשם על ידי'];
+function logRows(list){
+  return list.slice().sort((a,b)=>(a.date+' '+a.time).localeCompare(b.date+' '+b.time)).map(f=>{
+    const fails=Object.entries(f.checks||{}).filter(([,v])=>v==='לא תקין').map(([k])=>LABELS[k]||k).join('; ');
+    const st=f.voided?'בוטל: '+f.voided.reason+' (על ידי '+f.voided.by+')':'פעיל';
+    return [f.date,f.time,f.pilot,f.model,f.place,(DECISION[f.decision]||[f.decision])[0],fails,f.comments||'',f.weather||'',st,f.by||''];
+  });
+}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
+function buildCsv(list){return '\ufeff'+[CSV_HEAD].concat(logRows(list)).map(r=>r.map(csvCell).join(',')).join('\r\n')}
+function exportName(){return 'bdach-flights-'+iso(new Date())+'.csv'}
+$('exportBtn').addEventListener('click',()=>{$('exportBox').hidden=!$('exportBox').hidden});
+$('csvBtn').addEventListener('click',()=>{
+  const list=visible();if(!list.length){showOffline('אין טיסות לייצוא.');return}
+  const b=new Blob([buildCsv(list)],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=exportName();document.body.append(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+});
+$('copyCsvBtn').addEventListener('click',async()=>{
+  const list=visible();if(!list.length){showOffline('אין טיסות לייצוא.');return}
+  const text=buildCsv(list).slice(1);const box=$('csvBox');box.value=text;
+  try{await navigator.clipboard.writeText(text);showOffline('');box.hidden=true;$('copyCsvBtn').textContent='הועתק ✓';setTimeout(()=>$('copyCsvBtn').textContent='העתקת הנתונים',2000)}
+  catch(e){box.hidden=false;box.focus();box.select()}
+});
+$('printLogBtn').addEventListener('click',()=>{
+  const list=visible();if(!list.length){showOffline('אין טיסות להדפסה.');return}
+  const pa=$('printArea');pa.replaceChildren();
+  pa.append(el('h2',null,'יומן בד״ח רחפנים · '+(clsName||'')+' · '+new Date().toLocaleDateString('he-IL')));
+  if(fPilot||fModel)pa.append(el('p',null,'סינון: '+[fPilot,fModel].filter(Boolean).join(' · ')));
+  const t=document.createElement('table');const hd=document.createElement('tr');
+  CSV_HEAD.forEach(c=>hd.append(el('th',null,c)));t.append(hd);
+  logRows(list).forEach(r=>{const tr=document.createElement('tr');r.forEach(c=>tr.append(el('td',null,c)));t.append(tr)});
+  pa.append(t);setTimeout(()=>window.print(),50);
+});
+
+/* ---- כרטיס מזג אוויר קבוע במסך הראשי ---- */
+const WX_CUR='temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,weather_code';
+const WX_HOUR='temperature_2m,wind_speed_10m,wind_speed_80m,wind_gusts_10m,precipitation,weather_code';
+let wxLoc=null;try{wxLoc=JSON.parse(load('bdach_loc')||'null')}catch(e){}
+let wxData=null,wxBusy=false,wxCardTimer=null,wxPanelOpen=false;
+const WX_ICON=c=>c==null?'':c===0?'☀️':c<=2?'⛅':c===3?'☁️':c<=48?'🌫️':c<=57?'🌦️':c<=67?'🌧️':c<=77?'🌨️':c<=82?'🌧️':'⛈️';
+const WX_DESC=c=>c==null?'':c===0?'בהיר':c<=2?'מעונן חלקית':c===3?'מעונן':c<=48?'ערפל':c<=57?'טפטוף':c<=67?'גשם':c<=77?'שלג':c<=82?'ממטרים':'סופת רעמים';
+function hourKey(t){return String(t||'').slice(0,13)+':00'}
+function windCls(v){return v>=35?'bad':v>=25?'warn':'ok'}
+function tile(label,value,sub,cls){const t=el('div','wxt'+(cls?' '+cls:''));t.append(el('span','wxl',label),el('b','wxv',value));if(sub)t.append(el('span','wxs',sub));return t}
+function polar(a,r){const t=a*Math.PI/180;return [170+r*Math.sin(t),170-r*Math.cos(t)]}
+function dialSvg(main,gust,from,aria){
+  const R=94,CIRC=2*Math.PI*R,ARC=CIRC*0.75,top=50;
+  const f=v=>(Math.min(top,Math.max(0,v))/top*ARC).toFixed(1);
+  const to=(from+180)%360;
+  let ticks='';for(let i=0;i<36;i++){ticks+='<line x1="170" y1="32" x2="170" y2="'+(i%3===0?42:38)+'" transform="rotate('+(i*10)+' 170 170)"/>'}
+  const [tx,ty]=polar(to,150),[fx,fy]=polar(from,150);
+  const gAng=225+Math.min(gust,top)/top*270;
+  const seg=(col,len,off,op)=>'<circle cx="170" cy="170" r="'+R+'" stroke="'+col+'" stroke-opacity="'+op+'" stroke-dasharray="'+len+' '+CIRC.toFixed(1)+'" stroke-dashoffset="-'+off+'"/>';
+  const z1=f(25),z2=f(35)-f(25),z3=f(50)-f(35);
+  return '<svg class="wxdial" viewBox="-10 -10 360 360" role="img" aria-label="'+aria+'">'
+   +'<g stroke="#5f7d99" stroke-width="2" stroke-linecap="round">'+ticks+'</g>'
+   +'<g font-family="inherit" font-size="15" font-weight="800" fill="#d4e2ef" text-anchor="middle"><text x="170" y="64">צ</text><text x="170" y="285">ד</text><text x="283" y="175">מז</text><text x="57" y="175">מע</text></g>'
+   +'<g fill="none" stroke-width="12" transform="rotate(135 170 170)">'
+   +seg('#3ddc97',z1,0,0.25)+seg('#f2b541',z2.toFixed(1),z1,0.25)+seg('#ff6b5e',z3.toFixed(1),(+z1)+z2,0.25)
+   +'<circle class="wxprog" cx="170" cy="170" r="'+R+'" stroke="'+(main>=35?'#ff6b5e':main>=25?'#f2b541':'#3ddc97')+'" stroke-dasharray="'+f(main)+' '+CIRC.toFixed(1)+'"/></g>'
+   +'<g transform="rotate('+gAng.toFixed(1)+' 170 170)"><line x1="170" y1="66" x2="170" y2="86" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>'
+   +'<g transform="rotate('+to+' 170 170)"><line x1="170" y1="296" x2="170" y2="60" stroke="#fff" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="3 7" stroke-linecap="round"/><polygon points="170,30 183,56 157,56" fill="#fff"/></g>'
+   +'<g transform="rotate('+from+' 170 170)"><circle cx="170" cy="48" r="8" fill="#0b2540" stroke="#fff" stroke-width="3"/></g>'
+   +'<g font-family="inherit" font-size="14" font-weight="800" text-anchor="middle">'
+   +'<rect x="'+(tx-23).toFixed(1)+'" y="'+(ty-12).toFixed(1)+'" width="46" height="24" rx="12" fill="#fff"/><text x="'+tx.toFixed(1)+'" y="'+(ty+5).toFixed(1)+'" fill="#0b2540">'+to+'°</text>'
+   +'<rect x="'+(fx-25).toFixed(1)+'" y="'+(fy-12).toFixed(1)+'" width="50" height="24" rx="12" fill="#0b2540" stroke="#fff" stroke-width="1.5"/><text x="'+fx.toFixed(1)+'" y="'+(fy+5).toFixed(1)+'" fill="#fff">'+from+'°</text></g>'
+   +'<text class="wxnum" x="170" y="180" font-family="inherit" font-size="88" font-weight="800" fill="#fff" text-anchor="middle">'+Math.round(main)+'</text>'
+   +'<text x="170" y="208" font-family="inherit" font-size="18" fill="#9fb6cc" text-anchor="middle">קמ״ש</text>'
+   +'<g font-family="inherit" font-size="12" fill="#7f99b3" text-anchor="middle"><text x="104" y="268">0</text><text x="236" y="268">50</text></g></svg>';
+}
+function chip(label,value,unit,cls){const t=el('div','wxchip'+(cls?' '+cls:''));const v=el('b',null,value);if(unit)v.append(' ',el('small',null,unit));t.append(el('span','wxl',label),v);return t}
+function renderCard(){
+  const box=$('wxBody');box.replaceChildren();
+  const {w,obs}=wxData;const c=w.current||{};
+  const hi=w.hourly&&w.hourly.time?w.hourly.time.indexOf(hourKey(c.time)):-1;const Hh=w.hourly||{};
+  const at=(k)=>hi>=0&&Hh[k]?Hh[k][hi]:undefined;
+  const d={t:c.temperature_2m,wind:c.wind_speed_10m,gust:c.wind_gusts_10m,rain:c.precipitation,code:c.weather_code,wind80:at('wind_speed_80m'),dir:c.wind_direction_10m};
+  if(obs){d.obsWind=obs.wind;d.obsGust=obs.gust}
+  const [lvl,verdict]=wxJudge(d);
+  const title={ok:'נוח להטסה',warn:'זהירות',bad:'לא מומלץ להמריא'}[lvl];
+  const top=el('div','wxtop');
+  const pill=el('div','wxpill '+lvl);pill.append(el('i'),el('b',null,title));
+  top.append(pill,el('span','wxdesc',(WX_ICON(d.code)+' '+WX_DESC(d.code)).trim()));
+  box.append(top);
+  const hasAlt=typeof d.wind80==='number';const main=hasAlt?d.wind80:d.wind;
+  const from=Math.round(((d.dir||0)%360+360)%360)%360;const to=(from+180)%360;
+  const gust=typeof d.gust==='number'?d.gust:main;
+  const aria='רוח '+Math.round(main)+' קמ״ש, משבים עד '+Math.round(gust)+'. מגיעה מ־'+from+' מעלות ונושבת אל '+to+' מעלות';
+  const dial=el('div','wxdialbox');dial.innerHTML=dialSvg(main,gust,from,aria);box.append(dial);
+  box.append(el('div','wxalt',hasAlt?'רוח בגובה 80 מ׳':'רוח בקרקע'));
+  const chips=el('div','wxchips');
+  chips.append(chip('משבים',String(Math.round(gust)),'קמ״ש',windCls(gust*0.8)));
+  chips.append(chip('גשם',(d.rain||0)>0?String(d.rain):'ללא',(d.rain||0)>0?'מ״מ':'',(d.rain||0)>=1?'bad':(d.rain||0)>0?'warn':''));
+  chips.append(chip('טמפ׳',Math.round(d.t)+'°','',d.t<=0||d.t>=38?'warn':''));
+  box.append(chips);
+  if(hi>=0&&Hh.wind_speed_80m){
+    const strip=el('div','wxhours');strip.setAttribute('aria-label','רוח בגובה 80 מ׳ בשעות הקרובות');
+    for(let i=hi;i<Math.min(hi+8,Hh.time.length);i++){
+      const v=Hh.wind_speed_80m[i];const col=el('div','wxh');const b=el('i',windCls(v));b.style.height=Math.max(6,Math.min(100,v/50*100))+'%';b.title=Math.round(v)+' קמ״ש';
+      col.append(el('span','wxhv',String(Math.round(v))),b,el('span','wxhl',Hh.time[i].slice(11,16)));strip.append(col);
+    }
+    box.append(strip);
+  }
+  let note=verdict+' הערכה כללית, לא מחליפה את מגבלות היצרן והחלטת המטיס.';
+  if(obs&&obs.km<=15)note='מדידה בשדה '+obs.id+' ('+obs.km+' ק״מ): '+obs.wind+' קמ״ש. '+note;
+  box.append(el('p','meta wxnote',note));
+}
+function renderCardState(){
+  $('wxPlace').textContent=wxLoc?wxLoc.name:'בחרו מיקום';
+  $('wxStamp').textContent=wxData?'עודכן '+new Date(wxData.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+(wxData.stale?' · לא עודכן, מוצגים נתונים ישנים':''):'';
+  $('wxSetup').hidden=!(wxPanelOpen||!wxLoc);
+  $('wxRefresh').hidden=!wxLoc;
+}
+async function loadCard(){
+  if(!token||wxBusy)return;
+  renderCardState();
+  if(!wxLoc){$('wxBody').replaceChildren(el('p','meta','כדי לראות תחזית ורוח בזמן אמת, בחרו מיקום.'));return}
+  wxBusy=true;
+  if(!wxData)$('wxBody').replaceChildren(el('p','meta','טוען מזג אוויר…'));
+  try{
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+wxLoc.lat+'&longitude='+wxLoc.lng+'&current='+WX_CUR+'&hourly='+WX_HOUR+'&forecast_days=2&timezone=auto&wind_speed_unit=kmh';
+    const [w,obs]=await Promise.all([fetchJson(u),nearestMetar(wxLoc.lat,wxLoc.lng).catch(()=>null)]);
+    if(!w||!w.current)throw new Error('no data');
+    wxData={w,obs,at:Date.now(),stale:false};renderCard();
+  }catch(ex){
+    if(wxData){wxData.stale=true}else{const b=el('div','wx warn','לא הצלחנו להביא מזג אוויר עכשיו.');const r=el('button','ghost','נסו שוב');r.type='button';r.addEventListener('click',loadCard);$('wxBody').replaceChildren(b,r)}
+  }finally{wxBusy=false;renderCardState()}
+}
+function setWxLoc(lat,lng,name){wxLoc={lat:+(+lat).toFixed(4),lng:+(+lng).toFixed(4),name:name||'המיקום שלי'};store('bdach_loc',JSON.stringify(wxLoc));wxData=null;wxPanelOpen=false;$('wxMsg2').textContent='';loadCard()}
+$('wxPlaceBtn').addEventListener('click',()=>{wxPanelOpen=!wxPanelOpen;renderCardState();if(wxPanelOpen)$('wxCity').focus()});
+$('wxRefresh').addEventListener('click',()=>{wxData&&(wxData.stale=false);loadCard()});
+$('wxHere').addEventListener('click',()=>{
+  const m=$('wxMsg2');m.textContent='';
+  if(!navigator.geolocation){m.textContent='המכשיר לא תומך במיקום. הקלידו עיר.';return}
+  $('wxHere').disabled=true;m.textContent='מבקש גישה למיקום…';
+  try{
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      const lat=pos.coords.latitude,lng=pos.coords.longitude;let name='';
+      try{const o=await call('geocode',{lat:lat.toFixed(5),lng:lng.toFixed(5)});name=((o&&o.address)||'').split(',').slice(0,2).join(',').trim()}catch(e){}
+      $('wxHere').disabled=false;setWxLoc(lat,lng,name||'המיקום שלי');
+    },err=>{$('wxHere').disabled=false;m.textContent=(err&&err.code===1)?'לא אישרתם גישה למיקום. הקלידו עיר.':'לא הצלחנו לקבל מיקום. הקלידו עיר.'},{timeout:10000,maximumAge:60000});
+  }catch(e){$('wxHere').disabled=false;m.textContent='לא הצלחנו לקבל מיקום. הקלידו עיר.'}
+});
+$('wxCityForm').addEventListener('submit',async e=>{
+  e.preventDefault();const q=$('wxCity').value.trim(),m=$('wxMsg2');m.textContent='';
+  if(q.length<2){m.textContent='הקלידו שם של עיר או ישוב.';return}
+  $('wxCitySet').disabled=true;
+  try{
+    const g=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?count=1&language=he&name='+encodeURIComponent(q));
+    const r=g&&g.results&&g.results[0];
+    if(!r){m.textContent='לא מצאנו את המקום הזה.';return}
+    setWxLoc(r.latitude,r.longitude,[r.name,r.admin1].filter(Boolean).join(', '));$('wxCity').value='';
+  }catch(ex){m.textContent='החיפוש נכשל. נסו שוב.'}
+  finally{$('wxCitySet').disabled=false}
+});
+function startCard(){stopCard();loadCard();wxCardTimer=setInterval(()=>{if(!document.hidden)loadCard()},10*60*1000)}
+function stopCard(){if(wxCardTimer){clearInterval(wxCardTimer);wxCardTimer=null}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token&&(!wxData||Date.now()-wxData.at>5*60*1000))loadCard()});
+
+/* ---- היומן מאחורי כפתור ---- */
+function setCal(open){$('calPanel').hidden=!open;$('calToggle').setAttribute('aria-expanded',String(open));$('calToggle').textContent=open?'הסתר יומן':'📅 יומן וסינון';store('bdach_cal',open?'1':'0')}
+$('calToggle').addEventListener('click',()=>setCal($('calPanel').hidden));
+setCal(load('bdach_cal')==='1');
+
+/* ---- session ---- */
+function enterApp(o){
+  token=o.token||token;uid=o.name;canEdit=!!o.admin;ver=null;lastPending=0;clsName=o.className||clsName;
+  store('bdach_token',token);
+  $('loginView').hidden=true;$('calView').style.display='contents';
+  $('who').hidden=false;$('addBtn').hidden=false;$('fab').hidden=false;
+  if(o.init){if(o.init.editMinutes)editMin=o.init.editMinutes;flights=o.init.flights||[];allNames=o.init.names||[];ver=o.init.v;applyMe({admin:canEdit,pending:o.init.pending||0});setSync(true);render();startPolling();return}
+  applyMe({admin:canEdit,pending:0});render();refresh();startPolling();
+}
+function logout(msg){
+  token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
+  store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
+  $('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=true;$('who').hidden=true;
+  $('addBtn').hidden=true;$('fab').hidden=true;showOffline('');
+  showLogin(msg);
+}
+$('logout').addEventListener('click',()=>logout());
+
+/* ---- login ---- */
+let loginMode='login';
+const NORM=v=>String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const CLS_ERR={BAD_CLASS:'קוד כיתה שגוי.',LOCKED:'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.'};
+function showClassStep(msg){
+  $('loginView').hidden=false;$('loginForm').hidden=true;$('reqForm').hidden=true;$('classForm').hidden=false;
+  $('cerr').textContent=msg||'';$('ccode').value='';
+}
+function fillNames(o){
+  clsName=o.className;claimedSet=o.claimed||[];$('className').textContent=o.className;
+  const sel=$('lname');const cur=sel.value;
+  sel.replaceChildren();const first=document.createElement('option');first.value='';first.textContent='בחרו את השם שלכם';sel.append(first);
+  o.names.forEach(n=>{const op=document.createElement('option');op.value=n;op.textContent=n;sel.append(op)});
+  if(cur&&o.names.indexOf(cur)>=0)sel.value=cur;
+  setLoginMode(sel.value&&claimedSet.indexOf(sel.value)<0?'register':'login');
+}
+async function showLogin(msg){
+  $('loginView').hidden=false;$('reqForm').hidden=true;
+  if(!classCode){showClassStep(msg);return}
+  $('classForm').hidden=true;$('loginForm').hidden=false;
+  $('lpin').value='';$('lsc').value='';$('lerr').textContent=msg||'';
+  let cached=null;try{cached=JSON.parse(load('bdach_ci')||'null')}catch(e){}
+  if(cached&&cached.code===classCode)fillNames(cached);          // מציג מיד את הרשימה האחרונה, ומרענן ברקע
+  else{$('lname').replaceChildren();const o=document.createElement('option');o.value='';o.textContent='טוען…';$('lname').append(o)}
+  try{
+    const o=await call('classInfo');
+    if(o.error){classCode='';store('bdach_class',null);store('bdach_ci',null);showClassStep(CLS_ERR[o.error]||'הקוד לא תקין.');return}
+    store('bdach_ci',JSON.stringify({code:classCode,className:o.className,names:o.names,claimed:o.claimed}));
+    fillNames(o);setSync(true);
+  }catch(ex){if(!cached)$('lerr').textContent='אין חיבור לשרת.'}
+}
+$('classForm').addEventListener('submit',async e=>{
+  e.preventDefault();const code=NORM($('ccode').value);
+  if(code.length<4){$('cerr').textContent='הקלידו את קוד הכיתה.';return}
+  $('cbtn').disabled=true;classCode=code;
+  try{
+    const o=await call('classInfo');
+    if(o.error){classCode='';$('cerr').textContent=CLS_ERR[o.error]||'הקוד לא תקין.';return}
+    store('bdach_class',code);await showLogin();
+  }catch(ex){classCode='';$('cerr').textContent='אין חיבור לשרת. נסו שוב.'}
+  finally{$('cbtn').disabled=false}
+});
+$('changeClass').addEventListener('click',()=>{classCode='';store('bdach_class',null);store('bdach_ci',null);showClassStep()});
+function setLoginMode(m){
+  loginMode=m;const reg=m==='register';
+  $('pin2wrap').hidden=!reg;$('lpin2').value='';$('scWrap').hidden=!reg;
+  $('lpinL').textContent=reg?'בחרו קוד אישי (4 עד 6 ספרות)':'קוד אישי';
+  $('lhint').textContent=reg?'זו הכניסה הראשונה שלכם. הקלידו את הקוד החד-פעמי שקיבלתם מהמנהל, ובחרו קוד שתזכרו.':'שכחתם את הקוד? מנהל יכול לאפס אותו ולתת לכם קוד חד-פעמי חדש.';
+  $('lbtn').textContent=reg?'פתיחת חשבון וכניסה':'כניסה';
+}
+$('lname').addEventListener('change',()=>{
+  const n=$('lname').value;$('lerr').textContent='';
+  setLoginMode(n&&claimedSet.indexOf(n)<0?'register':'login');
+});
+$('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();const err=$('lerr');err.textContent='';
+  const name=$('lname').value,pin=$('lpin').value.trim();
+  if(!name){err.textContent='בחרו שם.';return}
+  if(loginMode==='register'&&NORM($('lsc').value).length<4){err.textContent='הקלידו את הקוד החד-פעמי מהמנהל.';return}
+  if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד האישי הוא 4 עד 6 ספרות.';return}
+  if(loginMode==='register'&&$('lpin2').value.trim()!==pin){err.textContent='שני הקודים לא זהים.';return}
+  $('lbtn').disabled=true;
+  try{
+    const o=await call(loginMode==='register'?'register':'login',{name,pin,studentCode:$('lsc').value});
+    if(o.token){enterApp(o);return}
+    if(o.error==='NO_PIN'){claimedSet=claimedSet.filter(x=>x!==name);setLoginMode('register');err.textContent='זו הכניסה הראשונה שלכם. הקלידו את הקוד החד-פעמי מהמנהל.';return}
+    if(o.error==='ALREADY'){claimedSet.push(name);setLoginMode('login');err.textContent='כבר נפתח חשבון לשם הזה. היכנסו עם הקוד האישי.';return}
+    if(o.error==='BAD_CLASS'){classCode='';store('bdach_class',null);showClassStep('קוד הכיתה השתנה. הקלידו את הקוד החדש.');return}
+    err.textContent=({BAD:'קוד שגוי. נשארו '+o.left+' ניסיונות.',BAD_CODE:'הקוד החד-פעמי שגוי. נשארו '+o.left+' ניסיונות.',NO_CODE:'עוד לא הונפק לכם קוד חד-פעמי. בקשו מהמנהל.',CODE_EXPIRED:'הקוד החד-פעמי פג תוקף. בקשו מהמנהל קוד חדש.',LOCKED:'נעול ל-'+(o.minutes||10)+' דקות אחרי יותר מדי ניסיונות.',BAD_PIN_FORMAT:'הקוד האישי הוא 4 עד 6 ספרות.',PENDING:'הבקשה שלכם ממתינה לאישור מנהל.',REJECTED:'הבקשה נדחתה.'})[o.error]||'הכניסה נכשלה.';
+  }catch(ex){err.textContent='אין חיבור לשרת. נסו שוב.'}
+  finally{$('lbtn').disabled=false}
+});
+
+/* ---- בקשת הצטרפות למי שלא ברשימה ---- */
+$('notListed').addEventListener('click',()=>{$('loginForm').hidden=true;$('reqForm').hidden=false;$('rerr').textContent='';$('rok').textContent=''});
+$('reqBack').addEventListener('click',()=>{$('reqForm').hidden=true;$('loginForm').hidden=false;showLogin()});
+const REQ_ERR={BAD_NAME:'השם לא תקין (אותיות ומספרים, 2 עד 40 תווים).',BAD_PIN_FORMAT:'הקוד הוא 4 עד 6 ספרות.',EXISTS:'השם כבר קיים. נסו להיכנס מהרשימה.',BAD_CLASS:'קוד הכיתה השתנה. חזרו וקלידו אותו מחדש.',LOCKED:'יותר מדי ניסיונות. נסו שוב בעוד כמה דקות.',ALREADY_PENDING:'כבר יש בקשה ממתינה בשם הזה.',TOO_MANY:'יש יותר מדי בקשות ממתינות. פנו למנהל.'};
+$('reqForm').addEventListener('submit',async e=>{
+  e.preventDefault();const err=$('rerr');err.textContent='';$('rok').textContent='';
+  const name=$('rname').value.trim().replace(/\s+/g,' '),pin=$('rpin').value.trim();
+  if(name.length<2){err.textContent='כתבו שם מלא.';return}
+  if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד הוא 4 עד 6 ספרות.';return}
+  if($('rpin2').value.trim()!==pin){err.textContent='שני הקודים לא זהים.';return}
+  $('rbtn').disabled=true;
+  try{
+    const o=await call('requestAccess',{name,pin,note:$('rnote').value.trim()});
+    if(o.ok)$('rok').textContent='הבקשה נשלחה למנהל. אחרי האישור היכנסו עם השם והקוד שבחרתם. אפשר ללחוץ "בדיקת סטטוס" בכל רגע.';
+    else err.textContent=REQ_ERR[o.error]||'השליחה נכשלה.';
+  }catch(ex){err.textContent='אין חיבור לשרת. נסו שוב.'}
+  finally{$('rbtn').disabled=false}
+});
+$('reqStatus').addEventListener('click',async()=>{
+  const err=$('rerr');err.textContent='';$('rok').textContent='';
+  const name=$('rname').value.trim().replace(/\s+/g,' ');
+  if(name.length<2){err.textContent='כתבו את השם ששלחתם בבקשה.';return}
+  try{
+    const o=await call('requestStatus',{name});
+    if(o.status==='approved'){$('reqForm').hidden=true;$('loginForm').hidden=false;await showLogin();$('lname').value=name;$('lerr').textContent='הבקשה אושרה. היכנסו עם הקוד שבחרתם.';return}
+    const m={pending:'הבקשה עדיין ממתינה לאישור.',rejected:'הבקשה נדחתה.',none:'לא נמצאה בקשה בשם הזה.'}[o.status];
+    if(o.status==='pending')$('rok').textContent=m;else err.textContent=m||'הבדיקה נכשלה.';
+  }catch(ex){err.textContent='אין חיבור לשרת. נסו שוב.'}
+});
+
+(async()=>{
+  render();
+  token=load('bdach_token');
+  if(token){
+    try{const o=await call('flights',{v:null});if(o&&o.name){enterApp({name:o.name,admin:o.admin,className:o.className,init:o});return}}catch(ex){}
+    token=null;
+  }
+  showLogin();
+})();
+
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&!(window.google&&google.script)){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+</script>
+
+</body></html>
