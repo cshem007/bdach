@@ -111,6 +111,9 @@ h3{margin:0 0 10px;font:600 1.05rem var(--f-display)}
 .ptab{width:100%;border-collapse:collapse;margin:6px 0 10px}.ptab th,.ptab td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:start}
 .ptab th{font-size:.8rem;color:var(--muted);font-weight:600}.ptab td.num,.ptab th.num{text-align:center}.ptab .link{font-weight:700;text-decoration:none}
 .ptab tr.tot td{font-weight:800;border-top:2px solid var(--line)}
+#profView{width:100%;max-width:760px;margin-inline:auto}
+.qban{display:flex;flex-wrap:wrap;align-items:center;gap:8px;justify-content:space-between}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
 .wxcard{background:#0b2540;color:#fff;border-color:#0b2540}
 .wxcard .link{color:#fff}.wxcard .meta,.wxcard .wxl,.wxcard .wxhl,.wxcard .wxalt,.wxcard .wxdesc{color:#9fb6cc}
 .wxcard .ghost{background:#14375a;color:#fff;border-color:#2b5681}
@@ -233,6 +236,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
   </header>
   <div id="banner" class="banner" hidden></div>
+  <div id="qBanner" class="banner qban" hidden></div>
 
   <section id="loginView" class="panel login" hidden>
     <h3>כניסה</h3>
@@ -520,7 +524,7 @@ function render(){
   const grid=$('days');grid.replaceChildren();
   const start=new Date(viewY,viewM,1-first.getDay());
   syncFilters();
-  const byDate={};for(const f of visible())(byDate[f.date]=byDate[f.date]||[]).push(f);
+  const byDate={};for(const f of visible().concat(qPending()))(byDate[f.date]=byDate[f.date]||[]).push(f);
   const todayIso=iso(new Date());
   for(let i=0;i<42;i++){
     const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
@@ -552,7 +556,7 @@ function renderDetail(list){
   list.sort((a,c)=>(a.time||'').localeCompare(c.time||'')).forEach(f=>{
     const box=el('div','flight'+(f.voided?' voided':''));
     const r1=el('div','row');
-    const dec=f.voided?['הרישום בוטל','bad']:(DECISION[f.decision]||['','']);
+    const dec=f.pending?[f.qerr?'לא נשלח':'ממתין לשליחה','warn']:f.voided?['הרישום בוטל','bad']:(DECISION[f.decision]||['','']);
     r1.append(el('b',null,(f.time||'')+'  ·  '+(f.pilot||'')),el('span','badge '+dec[1],dec[0]));
     box.append(r1);
     box.append(el('div','meta',[f.model,f.place,f.group].filter(Boolean).join('  ·  ')));
@@ -561,7 +565,10 @@ function renderDetail(list){
     if(f.comments)box.append(el('div',null,f.comments));
     if(f.weather){const p=wxParse(f.weather);if(p.rec){if(p.rec.x)box.append(el('div','fails','אושר למרות מזג אוויר אדום. סיבה: '+p.rec.x));box.append(wxDetails(p.rec))}else box.append(el('div','meta','מזג אוויר: '+p.text))}
     if(f.editedAt)box.append(el('div','meta','נערך '+new Date(f.editedAt).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})));
-    if(f.voided){
+    if(f.pending){
+      box.append(el('div','meta',f.qerr?'השרת דחה את הרישום ('+f.qerr+'). מחקו אותו ורשמו מחדש.':'נשמר בטלפון. יישלח אוטומטית כשיחזור החיבור.'));
+      box.append(armBtn('מחיקה מהתור','danger',()=>{qSave(qLoad().filter(it=>it.f.cid!==f.cid));renderQ();render()}));
+    }else if(f.voided){
       box.append(el('div','voidnote','הרישום בוטל על ידי '+(f.voided.by||'?')+(f.voided.at?' ב-'+new Date(f.voided.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):'')+'. סיבה: '+f.voided.reason));
       if(canEdit){const del=armBtn('מחיקה סופית','danger',()=>removeFlight(f.id));box.append(del)}
     }else if(canEdit||(uid&&(f.by===uid||f.pilot===uid))){
@@ -584,7 +591,7 @@ function renderDetail(list){
         form.append(inp,ok,no);box.append(form,msg);inp.focus();
       });
       box.append(vb)}
-    if(!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)&&Date.now()-(f.createdAt||0)<=editMin*60000))){
+    if(!f.pending&&!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)&&Date.now()-(f.createdAt||0)<=editMin*60000))){
       const eb=el('button','ghost','עריכה');eb.type='button';eb.addEventListener('click',()=>openForm(null,f));box.append(eb)}
     p.append(box)});
   const add=el('button','ghost','+ הוספת טיסה ליום הזה');add.type='button';add.style.marginTop='8px';
@@ -705,11 +712,17 @@ $('form').addEventListener('submit',async e=>{
   $('saveBtn').disabled=true;
   try{
     const o=editingId?await call('editFlight',{id:editingId,flight:f}):await call('addFlight',{flight:f});
+    if(o&&o.error==='RED_NEEDS_REASON'){syncRed()}
     if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.',RED_NEEDS_REASON:'מזג האוויר אדום. כדי לאשר המראה כתבו מדוע התנאים בטוחים.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
     sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();
     closeForm();await refresh();
   }catch(ex){
-    if(!ex||ex.error!=='AUTH')err.textContent='השמירה נכשלה. בדקו חיבור ונסו שוב.';
+    if(ex&&ex.error==='AUTH')return;
+    if(!editingId){      // אין חיבור: שומרים בטלפון, נשלח לבד
+      qSave(qLoad().concat([{f:f,at:Date.now()}]));
+      sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();
+      closeForm();renderQ();render();
+    }else err.textContent='השמירה נכשלה. בדקו חיבור ונסו שוב.';
   }finally{$('saveBtn').disabled=false}
 });
 
@@ -717,6 +730,48 @@ function store(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 let classCode=load('bdach_class')||'',clsName='',claimedSet=[];
 const API_URL=(window.BDACH_API||'').trim();
+/* ---- שמירה בלי קליטה: טיסה חדשה שלא נשלחה נשמרת בטלפון ונשלחת אוטומטית כשחוזר החיבור ---- */
+const qKey=()=>'bdach_q:'+(uid||'');
+function qLoad(){try{const a=JSON.parse(load(qKey())||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function qSave(a){store(qKey(),a.length?JSON.stringify(a):null)}
+const isNetErr=ex=>!(ex&&ex.error==='AUTH');
+function qPending(){
+  return qLoad().filter(it=>(!fPilot||it.f.pilot===fPilot)&&(!fModel||it.f.model===fModel))
+    .map(it=>Object.assign({},it.f,{id:'q:'+it.f.cid,pending:true,qerr:it.err||'',voided:null,editedAt:0}));
+}
+function renderQ(){
+  const b=$('qBanner');const q=qLoad();b.replaceChildren();
+  if(!q.length||!token){b.hidden=true;return}
+  const bad=q.filter(it=>it.err).length,wait=q.length-bad;
+  if(wait)b.append(el('span',null,wait+' '+(wait===1?'טיסה נשמרה':'טיסות נשמרו')+' בטלפון וממתינות לשליחה (אין חיבור).'));
+  if(bad)b.append(el('span',null,bad+' לא נשלחו כי השרת דחה אותן. פתחו אותן ביומן ורשמו מחדש.'));
+  if(wait){const bt=el('button','ghost','שלח עכשיו');bt.type='button';bt.addEventListener('click',()=>{flushQueue(true)});b.append(bt)}
+  b.hidden=false;
+}
+let flushing=false;
+async function flushQueue(manual){
+  if(!token||!uid||flushing)return;
+  let q=qLoad();if(!q.some(it=>!it.err))return;
+  flushing=true;let sent=0;
+  try{
+    for(let i=0;i<q.length;i++){
+      if(q[i].err)continue;
+      let o;
+      try{o=await call('addFlight',{flight:q[i].f})}catch(ex){if(isNetErr(ex)){if(manual)showOffline('עדיין אין חיבור. נסו שוב כשיש קליטה.');break}return}
+      if(o&&o.error)q[i].err=o.error;else{q.splice(i,1);i--;sent++}
+      qSave(q);
+    }
+  }finally{flushing=false}
+  renderQ();
+  if(sent){showOffline('');await refresh()}else render();
+}
+window.addEventListener('online',()=>{if(token){refresh();flushQueue()}});
+/* עותק אחרון של הנתונים, כדי שהאפליקציה תיפתח גם בלי קליטה */
+function cacheSave(){
+  if(!token||!uid)return;
+  try{localStorage.setItem('bdach_cache',JSON.stringify({uid:uid,admin:canEdit,className:clsName,names:allNames,editMin:editMin,flights:flights.slice(-400),at:Date.now()}))}catch(e){}
+}
+function cacheLoad(){try{const c=JSON.parse(load('bdach_cache')||'null');return c&&c.uid?c:null}catch(e){return null}}
 const SAFE_RETRY={classInfo:1,login:1,flights:1,adminData:1,requestStatus:1,me:1,geocode:1};
 function call(action,p){
   const payload=JSON.stringify(Object.assign({action,token,code:classCode},p||{}));
@@ -765,7 +820,8 @@ async function refresh(){
     if(!o.same){flights=o.flights||[];allNames=o.names||[]}
     if(o.className)clsName=o.className;
     if(o.editMinutes)editMin=o.editMinutes;
-    ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same){render();if(profOpen)renderProfile()}
+    ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same){render();if(profOpen)renderProfile();cacheSave()}
+    if(qLoad().some(it=>!it.err))flushQueue()
   }catch(ex){
     if(!ex||ex.error!=='AUTH'){setSync(false);$('sync').lastChild.textContent='אין חיבור';showOffline('אין חיבור לשרת. הנתונים יתעדכנו כשהחיבור יחזור.')}
   }finally{busy=false}
@@ -922,11 +978,12 @@ function wxParse(s){
   return{text:String(s||'')};
 }
 const wxWind=r=>typeof r.h==='number'?r.h:r.w;
-const wxMiniText=r=>'💨 '+Math.round(wxWind(r))+' קמ״ש · '+Math.round(r.t)+'°';
+const wxMiniText=r=>'💨 '+Math.round(wxWind(r))+' קמ״ש · '+Math.round(r.t)+'°'+(r.n===1?' 🌙':'');
 function wxLines(r){
   const out=['רוח בקרקע '+Math.round(r.w)+' קמ״ש (משבים '+Math.round(r.g||0)+')'+(typeof r.h==='number'?', בגובה 80 מ׳ '+Math.round(r.h)+' קמ״ש':'')];
   out.push('טמפ׳ '+Math.round(r.t)+'°, '+((r.r||0)>0?'גשם '+r.r+' מ״מ':'ללא גשם'));
   out.push(r.at&&r.at!=='now'?'תחזית לשעה '+String(r.at).slice(11,16):'מזג אוויר כעת');
+  if(r.s)out.push('זריחה '+(r.u||'')+' · שקיעה '+r.s+(r.n===1?' (אחרי השקיעה או לפני הזריחה)':r.n===2?' (קרוב לשקיעה)':''));
   if(r.x)out.push('אושר למרות מזג אוויר אדום. סיבה: '+r.x);
   if(r.o)out.push('מדידה בפועל ב-'+r.o.i+' ('+r.o.k+' ק״מ): '+r.o.w+' קמ״ש'+(r.o.g?', משבים '+r.o.g:''));
   return out;
@@ -962,7 +1019,7 @@ async function fetchFormWx(auto){
     const HC='temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation,weather_code';
     const today=iso(new Date()),fdate=$('date').value||today;
     const [w,obs]=await Promise.all([
-      fetchJson('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current='+HC+'&hourly='+H+'&forecast_days=7&timezone=auto&wind_speed_unit=kmh'),
+      fetchJson('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current='+HC+'&hourly='+H+'&daily=sunrise,sunset&forecast_days=7&timezone=auto&wind_speed_unit=kmh'),
       fdate===today?nearestMetar(lat,lng).catch(()=>undefined):Promise.resolve(null)
     ]);
     if(seq!==wxFormSeq)return;
@@ -973,9 +1030,18 @@ async function fetchFormWx(auto){
     else if(w.current){const C=w.current;const ci=w.hourly&&w.hourly.time?w.hourly.time.indexOf(hourKey(C.time)):-1;d={t:C.temperature_2m,wind:C.wind_speed_10m,wind80:ci>=0&&w.hourly.wind_speed_80m?w.hourly.wind_speed_80m[ci]:undefined,gust:C.wind_gusts_10m,rain:C.precipitation,code:C.weather_code};at='now'}
     else throw new Error('no data');
     if(obs){d.obsWind=obs.wind;d.obsGust=obs.gust}
-    const [lvl,verdict]=wxJudge(d);
+    let [lvl,verdict]=wxJudge(d);
+    // שקיעה וזריחה ליום הטיסה: אחרי השקיעה או לפני הזריחה זו טיסת לילה
+    const dI=w.daily&&w.daily.time?w.daily.time.indexOf(fdate):-1;
+    const sunU=dI>=0&&w.daily.sunrise?String(w.daily.sunrise[dI]).slice(11,16):'',sunS=dI>=0&&w.daily.sunset?String(w.daily.sunset[dI]).slice(11,16):'';
+    const ft=($('time').value||'').slice(0,5);let night=0;
+    if(sunU&&sunS&&ft){
+      if(ft<sunU||ft>=sunS){night=1;if(lvl==='ok')lvl='warn';verdict='שימו לב: ההמראה אחרי השקיעה ('+sunS+') או לפני הזריחה ('+sunU+'). טיסה בחושך מוגבלת, בדקו שמותר לכם. '+verdict}
+      else{const m=x=>+x.slice(0,2)*60+ +x.slice(3,5);if(m(sunS)-m(ft)<=45){night=2;verdict='השקיעה ב-'+sunS+', תכננו לנחות לפני. '+verdict}}
+    }
     const r1=x=>typeof x==='number'?Math.round(x*10)/10:undefined;
     const rec={t:r1(d.t),w:r1(d.wind),h:r1(d.wind80),g:r1(d.gust),r:r1(d.rain)||0,c:d.code,l:lvl,at:at};
+    if(sunS){rec.s=sunS;rec.u=sunU;if(night)rec.n=night}
     if(obs)rec.o={i:obs.id,k:obs.km,w:obs.wind,g:obs.gust||0};
     wxText=JSON.stringify(rec);
     const b=$('wxMsg');b.replaceChildren(wxDetails(rec,verdict));syncRed();
@@ -1078,8 +1144,15 @@ function renderCard(){
   const at=(k)=>hi>=0&&Hh[k]?Hh[k][hi]:undefined;
   const d={t:c.temperature_2m,wind:c.wind_speed_10m,gust:c.wind_gusts_10m,rain:c.precipitation,code:c.weather_code,wind80:at('wind_speed_80m'),dir:c.wind_direction_10m};
   if(obs){d.obsWind=obs.wind;d.obsGust=obs.gust}
-  const [lvl,verdict]=wxJudge(d);
-  const title={ok:'נוח להטסה',warn:'זהירות',bad:'לא מומלץ להמריא'}[lvl];
+  let [lvl,verdict]=wxJudge(d);
+  let sunNote='',dark=false;
+  const dy=w.daily&&w.daily.time?w.daily.time.indexOf(String(c.time).slice(0,10)):-1;
+  if(dy>=0&&w.daily.sunrise&&w.daily.sunset){
+    const sr=String(w.daily.sunrise[dy]).slice(11,16),ss=String(w.daily.sunset[dy]).slice(11,16),hm=String(c.time).slice(11,16);
+    sunNote='זריחה '+sr+' · שקיעה '+ss;dark=hm<sr||hm>=ss;
+    if(dark&&lvl==='ok')lvl='warn';
+  }
+  const title=dark?'עכשיו חושך':{ok:'נוח להטסה',warn:'זהירות',bad:'לא מומלץ להמריא'}[lvl];
   const top=el('div','wxtop');
   const pill=el('div','wxpill '+lvl);pill.append(el('i'),el('b',null,title));
   top.append(pill,el('span','wxdesc',(WX_ICON(d.code)+' '+WX_DESC(d.code)).trim()));
@@ -1104,7 +1177,8 @@ function renderCard(){
     }
     full.append(strip);
   }
-  let note=verdict+' הערכה כללית, לא מחליפה את מגבלות היצרן והחלטת המטיס.';
+  let note=(dark?'אחרי השקיעה או לפני הזריחה. טיסה בחושך מוגבלת, בדקו שמותר לכם. ':'')+verdict+' הערכה כללית, לא מחליפה את מגבלות היצרן והחלטת המטיס.';
+  if(sunNote)full.append(el('div','wxalt','🌇 '+sunNote));
   if(obs&&obs.km<=15)note='מדידה בשדה '+obs.id+' ('+obs.km+' ק״מ): '+obs.wind+' קמ״ש. '+note;
   full.append(el('p','meta wxnote',note));
   const mini=el('button','wxmini');mini.type='button';mini.setAttribute('aria-expanded',String(wxOpen));
@@ -1125,7 +1199,7 @@ async function loadCard(){
   wxBusy=true;
   if(!wxData)$('wxBody').replaceChildren(el('p','meta','טוען מזג אוויר…'));
   try{
-    const u='https://api.open-meteo.com/v1/forecast?latitude='+wxLoc.lat+'&longitude='+wxLoc.lng+'&current='+WX_CUR+'&hourly='+WX_HOUR+'&forecast_days=2&timezone=auto&wind_speed_unit=kmh';
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+wxLoc.lat+'&longitude='+wxLoc.lng+'&current='+WX_CUR+'&hourly='+WX_HOUR+'&daily=sunrise,sunset&forecast_days=2&timezone=auto&wind_speed_unit=kmh';
     const [w,obs]=await Promise.all([fetchJson(u),nearestMetar(wxLoc.lat,wxLoc.lng).catch(()=>null)]);
     if(!w||!w.current)throw new Error('no data');
     wxData={w,obs,at:Date.now(),stale:false};renderCard();
@@ -1263,12 +1337,12 @@ function enterApp(o){
   store('bdach_token',token);
   $('loginView').hidden=true;$('calView').style.display='contents';
   $('who').hidden=false;$('addBtn').hidden=false;$('fab').hidden=false;
-  if(o.init){if(o.init.editMinutes)editMin=o.init.editMinutes;flights=o.init.flights||[];allNames=o.init.names||[];ver=o.init.v;applyMe({admin:canEdit,pending:o.init.pending||0});setSync(true);render();startPolling();return}
-  applyMe({admin:canEdit,pending:0});render();refresh();startPolling();
+  if(o.init){if(o.init.editMinutes)editMin=o.init.editMinutes;flights=o.init.flights||[];allNames=o.init.names||[];ver=o.init.v;applyMe({admin:canEdit,pending:o.init.pending||0});setSync(true);render();renderQ();cacheSave();startPolling();flushQueue();return}
+  applyMe({admin:canEdit,pending:0});render();renderQ();refresh();startPolling();
 }
 function logout(msg){
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
-  profOpen=false;profName=null;$('profView').hidden=true;
+  profOpen=false;profName=null;$('profView').hidden=true;$('qBanner').hidden=true;store('bdach_cache',null);
   store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
   $('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=true;$('who').hidden=true;
   $('addBtn').hidden=true;$('fab').hidden=true;showOffline('');
@@ -1383,7 +1457,13 @@ $('reqStatus').addEventListener('click',async()=>{
   render();
   token=load('bdach_token');
   if(token){
-    try{const o=await call('flights',{v:null});if(o&&o.name){enterApp({name:o.name,admin:o.admin,className:o.className,init:o});return}}catch(ex){}
+    try{const o=await call('flights',{v:null});if(o&&o.name){enterApp({name:o.name,admin:o.admin,className:o.className,init:o});return}}
+    catch(ex){
+      if(isNetErr(ex)){          // אין קליטה: נפתחים עם הנתונים האחרונים, והטיסות החדשות ייכנסו לתור
+        const c=cacheLoad();
+        if(c){uid=c.uid;enterApp({name:c.uid,admin:!!c.admin,className:c.className,init:{flights:c.flights||[],names:c.names||[],editMinutes:c.editMin,v:null,pending:0}});showOffline('אין חיבור. מוצגים הנתונים האחרונים שנשמרו. טיסות חדשות יישלחו כשהחיבור יחזור.');setSync(false);$('sync').lastChild.textContent='אין חיבור';return}
+      }
+    }
     token=null;
   }
   showLogin();
