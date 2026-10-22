@@ -190,6 +190,11 @@ textarea{min-height:80px}
   .actions button[type=submit]{flex:1}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:650px){
+  .who{flex-wrap:wrap;width:100%}
+  #whoName{flex:1 1 100%;font-size:.95rem}
+  .wxhead{row-gap:2px}.wxhead .link{flex:1 1 100%;text-align:start}
+}
 
 .who{display:flex;gap:8px;align-items:center;font-weight:700}
 .who button{color:#fff;border-color:rgba(255,255,255,.45);padding:6px 12px;min-height:36px}
@@ -645,7 +650,7 @@ $('geoBtn').addEventListener('click',()=>{
   try{
     navigator.geolocation.getCurrentPosition(async pos=>{
       const lat=pos.coords.latitude.toFixed(5),lng=pos.coords.longitude.toFixed(5);
-      let addr='';try{const o=await call('geocode',{lat:lat,lng:lng});addr=(o&&o.address)||''}catch(e){}
+      let addr='';try{const o=await call('geocode',{lat:lat,lng:lng});addr=cleanAddr(o&&o.address)}catch(e){}
       $('place').value=(addr?addr+' ':'')+'('+lat+', '+lng+')';
       st.textContent='המיקום נוסף. אפשר לערוך אותו.';btn.disabled=false;wxP=fetchFormWx(true);
     },err=>{
@@ -726,6 +731,7 @@ $('form').addEventListener('submit',async e=>{
   }finally{$('saveBtn').disabled=false}
 });
 
+const cleanAddr=a=>String(a||'').replace(/^\s*[23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3}[\s,]*/i,'').trim();
 function store(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
 function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 let classCode=load('bdach_class')||'',clsName='',claimedSet=[];
@@ -1217,7 +1223,7 @@ $('wxHere').addEventListener('click',()=>{
   try{
     navigator.geolocation.getCurrentPosition(async pos=>{
       const lat=pos.coords.latitude,lng=pos.coords.longitude;let name='';
-      try{const o=await call('geocode',{lat:lat.toFixed(5),lng:lng.toFixed(5)});name=((o&&o.address)||'').split(',').slice(0,2).join(',').trim()}catch(e){}
+      try{const o=await call('geocode',{lat:lat.toFixed(5),lng:lng.toFixed(5)});name=cleanAddr(o&&o.address).split(',').slice(0,2).join(',').trim()}catch(e){}
       $('wxHere').disabled=false;setWxLoc(lat,lng,name||'המיקום שלי');
     },err=>{$('wxHere').disabled=false;m.textContent=(err&&err.code===1)?'לא אישרתם גישה למיקום. הקלידו עיר.':'לא הצלחנו לקבל מיקום. הקלידו עיר.'},{timeout:10000,maximumAge:60000});
   }catch(e){$('wxHere').disabled=false;m.textContent='לא הצלחנו לקבל מיקום. הקלידו עיר.'}
