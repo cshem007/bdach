@@ -1266,7 +1266,7 @@ function renderCard(){
   box.append(mini,full);
 }
 function renderCardState(){
-  $('wxPlace').textContent=wxLoc?wxLoc.name:'בחרו מיקום';
+  $('wxPlace').textContent=wxLoc?(cleanAddr(wxLoc.name)||wxLoc.name):'בחרו מיקום';
   $('wxStamp').textContent=wxData?'עודכן '+new Date(wxData.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+(wxData.stale?' · לא עודכן, מוצגים נתונים ישנים':''):'';
   $('wxSetup').hidden=!(wxPanelOpen||!wxLoc);
   $('wxRefresh').hidden=!wxLoc;
@@ -1406,9 +1406,9 @@ function renderProfile(){
 }
 
 /* ---- היומן מאחורי כפתור ---- */
-function setCal(open){$('calPanel').hidden=!open;$('calToggle').setAttribute('aria-expanded',String(open));$('calToggle').textContent=open?'הסתר יומן':'📅 יומן וסינון';store('bdach_cal',open?'1':'0')}
+function setCal(open){$('calPanel').hidden=!open;$('calToggle').setAttribute('aria-expanded',String(open));$('calToggle').textContent=open?'הסתר יומן':'📅 יומן וסינון';store('bdach_cal2',open?'1':'0')}
 $('calToggle').addEventListener('click',()=>setCal($('calPanel').hidden));
-{const sv=load('bdach_cal');setCal(sv==null?matchMedia('(max-width:650px)').matches:sv==='1')}   // בטלפון היומן פתוח כברירת מחדל (חודש מלא); במחשב כמו קודם
+{const sv=load('bdach_cal2');setCal(sv==null?matchMedia('(max-width:650px)').matches:sv==='1')}   // בטלפון היומן פתוח כברירת מחדל (חודש מלא); במחשב כמו קודם
 
 /* ---- session ---- */
 function enterApp(o){
