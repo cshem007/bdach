@@ -240,7 +240,8 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 .codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
 #printArea{display:none}
 @media print{
-  body>*:not(#printArea),.wrap{display:none!important}
+  body>*:not(.wrap),.wrap>*:not(#printArea){display:none!important}   /* ה-printArea יושב בתוך .wrap: אסור להסתיר את ה-.wrap עצמו */
+  .wrap{display:block!important;padding:0;gap:0;max-width:none}
   #printArea{display:block!important;background:#fff;color:#000;padding:0}
   #printArea h2{font:700 16pt var(--f-display);margin:0 0 10px}
   #printArea .codes{grid-template-columns:repeat(2,1fr);gap:0}
