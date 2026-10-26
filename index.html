@@ -1274,7 +1274,8 @@ function renderCard(){
 }
 function renderCardState(){
   $('wxPlace').textContent=wxLoc?(cleanAddr(wxLoc.name)||wxLoc.name):'בחרו מיקום';
-  $('wxStamp').textContent=wxData?'עודכן '+new Date(wxData.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+(wxData.stale?' · לא עודכן, מוצגים נתונים ישנים':''):'';
+  const ageMin=wxData?Math.floor((Date.now()-wxData.at)/60000):0;
+  $('wxStamp').textContent=wxData?'עודכן '+new Date(wxData.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'})+(ageMin>=2?' · לפני '+ageMin+' דק׳':'')+(wxData.stale?' · לא עודכן, מוצגים נתונים ישנים':''):'';
   $('wxSetup').hidden=!(wxPanelOpen||!wxLoc);
   $('wxRefresh').hidden=!wxLoc;
 }
@@ -1320,9 +1321,15 @@ $('wxCityForm').addEventListener('submit',async e=>{
   }catch(ex){m.textContent='החיפוש נכשל. נסו שוב.'}
   finally{$('wxCitySet').disabled=false}
 });
-function startCard(){stopCard();loadCard();wxCardTimer=setInterval(()=>{if(!document.hidden)loadCard()},10*60*1000)}
+function startCard(){stopCard();loadCard();wxCardTimer=setInterval(()=>{if(!document.hidden)loadCard()},5*60*1000)}
 function stopCard(){if(wxCardTimer){clearInterval(wxCardTimer);wxCardTimer=null}}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&token&&(!wxData||Date.now()-wxData.at>5*60*1000))loadCard()});
+/* העדכון האוטומטי: בחזרה לאפליקציה (גם מהרקע של הטלפון), כשהחיבור חוזר, ובכל דקה מתעדכן "לפני X דק׳" (ואם עברו 12 דקות בלי עדכון, מושך מחדש) */
+function wxAutoRefresh(){if(!document.hidden&&token&&(!wxData||Date.now()-wxData.at>2*60*1000))loadCard()}
+document.addEventListener('visibilitychange',wxAutoRefresh);
+window.addEventListener('focus',wxAutoRefresh);window.addEventListener('pageshow',wxAutoRefresh);window.addEventListener('online',wxAutoRefresh);
+let lastDay=iso(new Date());
+setInterval(()=>{if(document.hidden||!token)return;const t=iso(new Date());if(t!==lastDay){lastDay=t;render()}   // עבר חצות: היום המסומן ביומן מתעדכן
+  if(!wxData)return;if(Date.now()-wxData.at>12*60*1000)loadCard();else renderCardState()},60*1000);
 
 /* ---- פרופיל טייס: מונים, דגמים, רשימת טיסות וייצוא. תלמיד רואה רק את עצמו, מנהל רואה טבלת כיתה ואת כולם ---- */
 let profOpen=false,profName=null;
