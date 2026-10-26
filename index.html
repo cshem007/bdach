@@ -125,7 +125,14 @@ h3{margin:0 0 10px;font:600 1.05rem var(--f-display)}
 .wxpill.ok{background:#3ddc97;color:#06281a}.wxpill.warn{background:#f2b541;color:#2b1d00}.wxpill.bad{background:#ff6b5e;color:#3a0804}
 .wxdialbox{margin:6px auto 0;max-width:330px}.wxdial{display:block;width:100%;height:auto}
 .wxalt{text-align:center;font-size:.8rem;margin-top:-6px}
-.wxmodel{display:block;margin:6px auto 0;max-width:260px;width:100%;font-size:.85rem;padding:6px 8px;border-radius:10px;background:#12304f;color:#d4e2ef;border:1px solid #2c4d6e}
+.wxmodel{display:block;margin:14px auto 8px;max-width:300px;width:100%;min-height:44px;font-size:.95rem;font-weight:700;padding:0 14px;border-radius:14px;background:#14375a;color:#fff;border:1px solid #2b5681}
+.wxfull .wxalt{margin-top:4px;line-height:1.5}
+.wxlevels{display:flex;gap:8px;justify-content:center;margin-top:6px}
+.wxlv{flex:1;max-width:170px;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;align-items:baseline;justify-content:center;background:#10304f;border:1px solid #1f4469;border-radius:14px;padding:8px 10px;color:#9fb6cc}
+.wxlv span{grid-column:1/-1;font-size:.75rem}
+.wxlv b{font:800 1.5rem/1.1 var(--f-display);color:#fff;justify-self:end}
+.wxlv small{font-size:.75rem}
+.wxlv.on{border-color:#3ddc97;background:#12395a}
 .wxchips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
 .wxchip{background:#14375a;border-radius:14px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
 .wxchip b{font:800 1.25rem var(--f-display)}.wxchip small{font-size:.75rem;font-weight:500;color:#9fb6cc}
@@ -1244,12 +1251,15 @@ function renderCard(){
   const gust=typeof d.gust==='number'?d.gust:main;
   const aria='רוח '+Math.round(main)+' קמ״ש, משבים עד '+Math.round(gust)+'. מגיעה מ־'+from+' מעלות ונושבת אל '+to+' מעלות';
   const dial=el('div','wxdialbox');dial.innerHTML=dialSvg(main,gust,from,aria+(lim?'. מגבלת הדגם '+lim+' קמ״ש':''),lim);full.append(dial);
+  const lv=el('div','wxlevels');
+  const mkLv=(name,val,on)=>{const x=el('div','wxlv'+(on?' on':''));x.append(el('span',null,name),el('b',null,String(Math.round(val))),el('small',null,'קמ״ש'));return x};
+  if(hasAlt)lv.append(mkLv('בקרקע · 10 מ׳',d.wind,false),mkLv('בגובה · 80 מ׳',d.wind80,true));else lv.append(mkLv('בקרקע',d.wind,true));
+  full.append(lv);
   const msel=document.createElement('select');msel.className='wxmodel';msel.setAttribute('aria-label','הדגם שלי');
   msel.append(...Array.from($('model').children).filter(o=>o.value!=='__other').map(o=>o.cloneNode(true)));msel.firstChild.textContent='הדגם שלי (למגבלת רוח)';msel.value=cardModel;
   msel.addEventListener('change',()=>{cardModel=msel.value;store('bdach_cardmodel',cardModel);renderCard()});
   full.append(msel);
   if(lim)full.append(el('div','wxalt','🔺 מגבלת הרוח של הדגם: '+(specOf(cardModel).v?'':'כ-')+lim+' קמ״ש'+(specOf(cardModel).v?'':' (משוער)')));
-  full.append(el('div','wxalt',hasAlt?'רוח בגובה 80 מ׳':'רוח בקרקע'));
   const chips=el('div','wxchips');
   chips.append(chip('משבים',String(Math.round(gust)),'קמ״ש',windCls(gust*0.8)));
   chips.append(chip('גשם',(d.rain||0)>0?String(d.rain):'ללא',(d.rain||0)>0?'מ״מ':'',(d.rain||0)>=1?'bad':(d.rain||0)>0?'warn':''));
