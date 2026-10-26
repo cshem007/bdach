@@ -222,6 +222,13 @@ textarea{min-height:80px}
 .clsmenu button[aria-current="true"]{background:#e3f1fb;font-weight:800}
 .mycls .mcbody{padding:4px 16px 14px;display:flex;flex-direction:column;gap:8px}
 .mycls summary .pbadge{margin-inline-start:6px}
+.cdot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none;margin-inline-end:8px;vertical-align:middle;border:2px solid rgba(255,255,255,.7);box-shadow:0 0 0 1px rgba(0,0,0,.18)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:36px;height:36px;min-height:36px;padding:0;border-radius:50%;border:3px solid transparent}
+.swatches button[aria-pressed="true"]{border-color:#0b2540}
+.mcname{display:flex;gap:8px;align-items:center}.mcname input{flex:1;min-width:0}
+.mcdel{border:1px dashed #d9534f;border-radius:12px;padding:8px 12px}
+.mcdel summary{color:#b3261e;font-weight:700;cursor:pointer;min-height:36px;display:flex;align-items:center}
 #ncCodeMsg.good{color:#0d6b47;font-weight:700}#ncCodeMsg.badc{color:#b3261e;font-weight:700}
 .who button{color:#fff;border-color:rgba(255,255,255,.45);padding:6px 12px;min-height:36px}
 .login{max-width:420px;width:100%;margin:10px auto}
@@ -375,6 +382,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <div class="row"><h3 style="margin:0">ניהול</h3><button type="button" class="ghost" id="adminBack">חזרה ליומן</button></div>
     <h4 class="sec-title">הכיתות שלי</h4>
     <div id="myClasses"></div>
+    <div id="myDeleted"></div>
     <h4 class="sec-title">הכיתה הנוכחית</h4>
     <div class="row"><span>כיתה: <b id="admClass"></b></span><span>קוד כיתה: <span class="codebox" id="admCode"></span></span></div>
     <div class="actions"><button type="button" class="danger" id="rotateBtn">החלפת קוד כיתה</button></div>
@@ -928,7 +936,7 @@ function armBtn(label,cls,fn){
     fn()});
   return b;
 }
-const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',IS_ADMIN:'קודם הסירו ממנו את הניהול.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.',BAD_CODE:'קוד כיתה: 4 עד 12 אותיות באנגלית או ספרות.',CODE_TAKEN:'הקוד הזה כבר תפוס. בחרו קוד אחר.',BAD_PIN:'הקוד האישי החדש הוא 4 עד 6 ספרות.',TOO_MANY:'יותר מדי כיתות בחשבון הזה.'};
+const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',IS_ADMIN:'קודם הסירו ממנו את הניהול.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.',BAD_CODE:'קוד כיתה: 4 עד 12 אותיות באנגלית או ספרות.',CODE_TAKEN:'הקוד הזה כבר תפוס. בחרו קוד אחר.',BAD_PIN:'הקוד האישי החדש הוא 4 עד 6 ספרות.',TOO_MANY:'יותר מדי כיתות בחשבון הזה.',IS_OWNER:'הבעלים של הכיתה לא יכול להפסיק להיות מנהל. קודם העבירו את הבעלות.',NOT_OWNER:'רק הבעלים של הכיתה יכול למחוק אותה.',BAD_CONFIRM:'שם הכיתה לא תואם.',LAST_CLASS:'זו הכיתה היחידה שלכם. אי אפשר למחוק אותה.',BAD_COLOR:'צבע לא תקין.',EXPIRED:'עברו יותר מ-30 יום. אי אפשר לשחזר.'};
 let lastCodes=[];
 const fmtCode=c=>c&&c.length>3?c.slice(0,3)+'-'+c.slice(3):c||'';
 function showCodes(list,title){
@@ -1034,10 +1042,10 @@ $('newClassForm').addEventListener('submit',async e=>{
 });
 
 /* ---- ריבוי כיתות: רשימה, מעבר מהיר ---- */
-let myCls=[];
+let myCls=[],myDel=[];
 async function loadMyClasses(){
   if(!token)return;
-  try{const o=await call('myClasses');if(o&&o.classes)myCls=o.classes}catch(e){}
+  try{const o=await call('myClasses');if(o&&o.classes){myCls=o.classes;myDel=o.deleted||[]}}catch(e){}
   updateClsBtn();if(adminOpen)renderMyClasses();
 }
 function updateClsBtn(){$('clsBtn').hidden=!(token&&myCls.length>1);if($('clsBtn').hidden)$('clsMenu').hidden=true}
@@ -1054,33 +1062,85 @@ async function switchClass(cid,thenAdmin){
     window.scrollTo(0,0);
   }catch(ex){if(!ex||ex.error!=='AUTH')showOffline('אין חיבור. נסו שוב.')}
 }
+const CCOL={blue:'#1f6fb2',green:'#2e9e6b',orange:'#e8743b',red:'#d9534f',purple:'#7a4fc4',teal:'#1aa3a3',pink:'#d6559a',gray:'#6b7b8c'};
+const CKEYS=Object.keys(CCOL);
+function clsColor(c){if(c.color&&CCOL[c.color])return CCOL[c.color];let h=0;for(const ch of String(c.id))h=(h*31+ch.charCodeAt(0))>>>0;return CCOL[CKEYS[h%CKEYS.length]]}
+function dot(c){const d=el('i','cdot');d.style.background=clsColor(c);return d}
+async function clsAct(action,p,okMsg){
+  const o=await adminAct(action,p,okMsg);return o}
 function renderMyClasses(){
-  const box=$('myClasses');box.replaceChildren();
-  if(myCls.length<2){box.append(el('p','meta','זו הכיתה היחידה שלכם. כיתה נוספת אפשר ליצור למטה, ואז תוכלו לעבור ביניהן במהירות.'));return}
+  const box=$('myClasses');const prev=[...box.querySelectorAll(':scope > details')];const was=new Set(prev.filter(x=>x.open).map(x=>x.dataset.cid));
+  box.replaceChildren();
+  const dl=$('myDeleted');dl.replaceChildren();
+  if(myCls.length<2)box.append(el('p','meta','זו הכיתה היחידה שלכם. כיתה נוספת אפשר ליצור למטה, ואז תוכלו לעבור ביניהן במהירות.'));
   myCls.forEach(c=>{
-    const d=document.createElement('details');d.className='bdach mycls';d.dataset.cid=c.id;if(c.current)d.open=true;
+    const d=document.createElement('details');d.className='bdach mycls';d.dataset.cid=c.id;if(prev.length?was.has(c.id):c.current)d.open=true;
     const sm=document.createElement('summary');
-    sm.append(el('span',null,c.name+(c.current?' · כאן':'')));
-    const r=el('span','cnt',c.admin?'מנהל':'תלמיד');sm.append(r);
+    const t=el('span',null);t.append(dot(c),document.createTextNode(c.name+(c.current?' · כאן':'')));sm.append(t);
+    sm.append(el('span','cnt',c.owner?'בעלים':c.admin?'מנהל':'תלמיד'));
     if(c.pending){const b=el('span','pbadge',c.pending);b.title='בקשות ממתינות';sm.append(b)}
     d.append(sm);
     const body=el('div','mcbody');
     body.append(el('div','meta',c.students+' תלמידים'));
     if(c.admin){const row=el('div','row');row.append(el('span',null,'קוד כיתה:'),el('span','codebox',c.code));body.append(row)}
+    if(c.admin){
+      const nm=el('div','mcname');const inp=document.createElement('input');inp.value=c.name;inp.maxLength=40;inp.setAttribute('aria-label','שם הכיתה');
+      const sv=el('button',null,'שמירת שם');sv.type='button';
+      sv.addEventListener('click',async()=>{
+        const v=inp.value.trim();if(v.length<2){$('adminMsg').textContent=ADMIN_ERR.BAD_CLASS_NAME;return}
+        const o=await clsAct('renameClass',{cid:c.id,name:v},'השם שונה.');
+        if(o&&o.ok){if(c.current){clsName=v;applyMe({admin:canEdit,pending:lastPending})}await loadMyClasses();loadAdmin()}});
+      nm.append(inp,sv);body.append(nm);
+      const sw=el('div','swatches');sw.setAttribute('role','group');sw.setAttribute('aria-label','צבע הכיתה');
+      CKEYS.forEach(k=>{const b=el('button',null);b.type='button';b.style.background=CCOL[k];b.setAttribute('aria-label',k);b.setAttribute('aria-pressed',String(clsColor(c)===CCOL[k]));
+        b.addEventListener('click',async()=>{const o=await clsAct('renameClass',{cid:c.id,color:k},'הצבע עודכן.');if(o&&o.ok)loadMyClasses()});sw.append(b)});
+      body.append(sw);
+    }
     const act=el('div','row');
     if(!c.current){const g=el('button',null,'עבור לכיתה');g.type='button';g.addEventListener('click',()=>switchClass(c.id));act.append(g)}
     if(c.admin&&!c.current){const g=el('button','ghost','עבור וניהול הכיתה');g.type='button';g.addEventListener('click',()=>switchClass(c.id,true));act.append(g)}
-    if(c.current&&c.admin)body.append(el('div','meta','הגדרות הכיתה הזו מופיעות למטה.'));
     if(act.children.length)body.append(act);
+    if(c.owner&&myCls.length>1){
+      const dd=document.createElement('details');dd.className='mcdel';
+      dd.append(el('summary',null,'מחיקת הכיתה'));
+      dd.append(el('p','meta','הכיתה, התלמידים והטיסות שלה יוסתרו מיד. אפשר לשחזר אותה 30 יום, ואחרי זה הכל נמחק לצמיתות.'));
+      const l1=el('label',null,'כתבו את שם הכיתה: '+c.name);const i1=document.createElement('input');i1.autocomplete='off';i1.setAttribute('aria-label','שם הכיתה לאישור');
+      const l2=el('label',null,'הקוד האישי שלכם');const i2=document.createElement('input');i2.type='password';i2.inputMode='numeric';i2.maxLength=6;i2.autocomplete='off';i2.setAttribute('aria-label','הקוד האישי');
+      const er=el('div','err');er.setAttribute('role','alert');
+      const go=el('button','danger','מחיקת הכיתה');go.type='button';
+      go.addEventListener('click',async()=>{
+        er.textContent='';go.disabled=true;
+        try{
+          const o=await call('deleteClass',{cid:c.id,pin:i2.value.trim(),confirm:i1.value.trim()});
+          if(o.ok){
+            if(o.session){closeAdmin();profOpen=false;$('profView').hidden=true;fPilot='';fModel='';flights=[];enterApp(o.session);openAdmin()}
+            await loadMyClasses();if(adminOpen){loadAdmin()}
+            $('adminMsg').textContent='הכיתה "'+c.name+'" נמחקה. אפשר לשחזר אותה ב-30 הימים הקרובים.';
+          }else er.textContent=o.error==='BAD'&&o.left!=null?'קוד שגוי. נשארו '+o.left+' ניסיונות.':(ADMIN_ERR[o.error]||'המחיקה נכשלה.');
+        }catch(ex){if(!ex||ex.error!=='AUTH')er.textContent='המחיקה נכשלה. נסו שוב.'}
+        finally{go.disabled=false}
+      });
+      dd.append(l1,i1,l2,i2,er,go);body.append(dd);
+    }else if(c.admin&&!c.owner)body.append(el('div','meta','רק הבעלים של הכיתה יכול למחוק אותה.'));
     d.append(body);box.append(d);
   });
+  if(myDel.length){
+    dl.append(el('h4','sec-title','כיתות שנמחקו'));
+    myDel.forEach(c=>{
+      const row=el('div','flight');const r=el('div','row');
+      r.append(el('b',null,c.name),el('span','meta','נשארו '+c.daysLeft+' ימים לשחזור'));
+      const rb=el('button',null,'שחזור');rb.type='button';
+      rb.addEventListener('click',async()=>{const o=await clsAct('restoreClass',{cid:c.id},'הכיתה שוחזרה.');if(o&&o.ok)await loadMyClasses()});
+      row.append(r,rb);dl.append(row);
+    });
+  }
 }
 $('clsBtn').addEventListener('click',e=>{
   e.stopPropagation();const m=$('clsMenu');
   if(!m.hidden){m.hidden=true;return}
   m.replaceChildren();
   myCls.forEach(c=>{const b=el('button',null);b.type='button';b.setAttribute('role','menuitem');if(c.current)b.setAttribute('aria-current','true');
-    b.append(el('span',null,c.name));if(c.pending)b.append(el('span','pbadge',c.pending));else if(c.current)b.append(el('span',null,'✓'));
+    const nm=el('span',null);nm.append(dot(c),document.createTextNode(c.name));b.append(nm);if(c.pending)b.append(el('span','pbadge',c.pending));else if(c.current)b.append(el('span',null,'✓'));
     b.addEventListener('click',()=>{if(c.current){m.hidden=true}else switchClass(c.id)});m.append(b)});
   m.hidden=false;
 });
@@ -1534,7 +1594,7 @@ function enterApp(o){
   applyMe({admin:canEdit,pending:0});render();renderQ();refresh();startPolling();
 }
 function logout(msg){
-  myCls=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;
+  myCls=[];myDel=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
   profOpen=false;profName=null;$('profView').hidden=true;$('qBanner').hidden=true;store('bdach_cache',null);
   store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
