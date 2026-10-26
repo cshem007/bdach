@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>יומן בד״ח רחפנים</title>
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0b2540"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
-<script>window.BDACH_API="https://script.google.com/macros/s/AKfycbw7CoSL7RetO0In8kR5w7uvnzV-0wjNn65VLKBlInrBpPAHQQgKJZEOvZ_-OVt-CuRhTQ/exec";/* באתר החיצוני: כתובת ה-Web app של Apps Script (נגמרת ב-/exec) */</script>
+<script>window.BDACH_API='https://script.google.com/macros/s/AKfycbw7CoSL7RetO0In8kR5w7uvnzV-0wjNn65VLKBlInrBpPAHQQgKJZEOvZ_-OVt-CuRhTQ/exec';/* באתר החיצוני: כתובת ה-Web app של Apps Script (נגמרת ב-/exec) */</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Rubik:wght@600;700&display=swap">
 <style>
 /* Layout: sticky header, month grid left-to-right in Hebrew order (Sunday on the right), day detail panel beneath; add-flight form is a full-width sheet. */
@@ -216,6 +216,13 @@ textarea{min-height:80px}
 }
 
 .who{display:flex;gap:8px;align-items:center;font-weight:700}
+.clsmenu{position:absolute;z-index:40;background:#fff;color:#0b2540;border:1px solid #cdd9e5;border-radius:14px;box-shadow:0 10px 28px rgba(11,37,64,.28);padding:6px;min-width:220px;max-width:92vw;inset-inline-start:16px;margin-top:-4px}
+.clsmenu button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;background:transparent;color:inherit;border:0;border-radius:10px;min-height:46px;padding:8px 12px;font:inherit;font-weight:600;text-align:start}
+.clsmenu button:hover,.clsmenu button:focus-visible{background:#eef3f8}
+.clsmenu button[aria-current="true"]{background:#e3f1fb;font-weight:800}
+.mycls .mcbody{padding:4px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.mycls summary .pbadge{margin-inline-start:6px}
+#ncCodeMsg.good{color:#0d6b47;font-weight:700}#ncCodeMsg.badc{color:#b3261e;font-weight:700}
 .who button{color:#fff;border-color:rgba(255,255,255,.45);padding:6px 12px;min-height:36px}
 .login{max-width:420px;width:100%;margin:10px auto}
 .pbadge{background:var(--bad);color:#fff;border-radius:10px;padding:0 7px;margin-inline-start:6px;font-size:.75rem;display:inline-block;line-height:18px}
@@ -257,9 +264,10 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       <h1>יומן בד״ח רחפנים</h1>
       <span class="sync" id="sync" role="status"><i></i><span>מתחבר…</span></span>
     </div>
-    <div class="who" id="who" hidden><span id="whoName"></span><button id="profBtn" type="button" class="ghost">הפרופיל שלי</button><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button id="clsBtn" type="button" class="ghost" hidden>החלפת כיתה ▾</button><button id="profBtn" type="button" class="ghost">הפרופיל שלי</button><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
     <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
   </header>
+  <div id="clsMenu" class="clsmenu" role="menu" hidden></div>
   <div id="banner" class="banner" hidden></div>
   <div id="qBanner" class="banner qban" hidden></div>
 
@@ -365,7 +373,9 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 
   <section id="adminView" class="panel" hidden>
     <div class="row"><h3 style="margin:0">ניהול</h3><button type="button" class="ghost" id="adminBack">חזרה ליומן</button></div>
-    <h4 class="sec-title">הכיתה</h4>
+    <h4 class="sec-title">הכיתות שלי</h4>
+    <div id="myClasses"></div>
+    <h4 class="sec-title">הכיתה הנוכחית</h4>
     <div class="row"><span>כיתה: <b id="admClass"></b></span><span>קוד כיתה: <span class="codebox" id="admCode"></span></span></div>
     <div class="actions"><button type="button" class="danger" id="rotateBtn">החלפת קוד כיתה</button></div>
     <h4 class="sec-title">בקשות הצטרפות</h4>
@@ -380,8 +390,14 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <details class="bdach" style="margin-top:16px"><summary><span>כיתה חדשה</span><span class="cnt"></span></summary>
       <form id="newClassForm" novalidate style="padding:0 16px 16px">
         <label for="ncName">שם הכיתה</label><input id="ncName" maxlength="40" autocomplete="off">
-        <label for="ncNames">שמות התלמידים, שם בכל שורה (הראשון יהיה מנהל הכיתה)</label>
-        <textarea id="ncNames" rows="6"></textarea>
+        <p class="meta" style="margin:0 0 8px">אתם הופכים אוטומטית למנהלי הכיתה החדשה, ואפשר להעביר ניהול אחר כך.</p>
+        <label for="ncCode">קוד הכיתה (לא חובה, 4 עד 12 אותיות באנגלית או ספרות)</label>
+        <input id="ncCode" maxlength="12" autocomplete="off" autocapitalize="characters" dir="ltr" placeholder="ריק = קוד אוטומטי">
+        <div id="ncCodeMsg" class="meta" role="status" aria-live="polite"></div>
+        <label for="ncNames">שמות התלמידים, שם בכל שורה (לא חובה, אתם כבר בפנים)</label>
+        <textarea id="ncNames" rows="5"></textarea>
+        <label for="ncPin2">קוד אישי נפרד לכיתה הזו (לא חובה, 4 עד 6 ספרות. ריק = אותו קוד שלכם)</label>
+        <input id="ncPin2" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
         <label for="ncPin">הקוד שלכם לאישור</label>
         <input id="ncPin" type="password" inputmode="numeric" autocomplete="off" maxlength="6">
         <div id="ncErr" class="err" role="alert"></div>
@@ -797,8 +813,8 @@ function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
 let classCode=load('bdach_class')||'',clsName='',claimedSet=[];
 const API_URL=(window.BDACH_API||'').trim();
 /* ---- שמירה בלי קליטה: טיסה חדשה שלא נשלחה נשמרת בטלפון ונשלחת אוטומטית כשחוזר החיבור ---- */
-const qKey=()=>'bdach_q:'+(uid||'');
-function qLoad(){try{const a=JSON.parse(load(qKey())||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+const qKey=()=>'bdach_q:'+(uid||'')+'|'+(clsName||'');
+function qLoad(){try{const lg='bdach_q:'+(uid||'');if(uid&&load(lg)&&!load(qKey())){store(qKey(),load(lg));store(lg,null)}const a=JSON.parse(load(qKey())||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function qSave(a){store(qKey(),a.length?JSON.stringify(a):null)}
 const isNetErr=ex=>!(ex&&ex.error==='AUTH');
 function qPending(){
@@ -902,7 +918,7 @@ function closeAdmin(){adminOpen=false;$('resetForm').hidden=true;$('resetBtn').h
 $('adminBtn').addEventListener('click',openAdmin);
 $('adminBack').addEventListener('click',closeAdmin);
 async function loadAdmin(){
-  try{const o=await call('adminData');if(o.error){$('adminMsg').textContent='אין הרשאה.';return}renderAdmin(o)}
+  try{const o=await call('adminData');if(o.error){$('adminMsg').textContent='אין הרשאה.';return}renderAdmin(o);loadMyClasses()}
   catch(e){$('adminMsg').textContent='הטעינה נכשלה. נסו שוב.'}
 }
 function armBtn(label,cls,fn){
@@ -912,7 +928,7 @@ function armBtn(label,cls,fn){
     fn()});
   return b;
 }
-const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',IS_ADMIN:'קודם הסירו ממנו את הניהול.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.'};
+const ADMIN_ERR={LAST_ADMIN:'אי אפשר להסיר את המנהל האחרון.',NO_ACCOUNT:'אפשר להעביר ניהול רק למי שכבר יצר קוד כניסה.',SAME:'זה אתם.',IS_ADMIN:'קודם הסירו ממנו את הניהול.',EXISTS:'השם כבר קיים.',NOT_FOUND:'הבקשה כבר טופלה.',FORBIDDEN:'אין הרשאה.',BAD_CLASS_NAME:'כתבו שם לכיתה.',BAD_NAMES:'רשימת השמות לא תקינה (שם בכל שורה, אותיות ומספרים בלבד, עד 80).',BAD:'קוד שגוי.',LOCKED:'נעול זמנית אחרי יותר מדי ניסיונות.',BAD_CODE:'קוד כיתה: 4 עד 12 אותיות באנגלית או ספרות.',CODE_TAKEN:'הקוד הזה כבר תפוס. בחרו קוד אחר.',BAD_PIN:'הקוד האישי החדש הוא 4 עד 6 ספרות.',TOO_MANY:'יותר מדי כיתות בחשבון הזה.'};
 let lastCodes=[];
 const fmtCode=c=>c&&c.length>3?c.slice(0,3)+'-'+c.slice(3):c||'';
 function showCodes(list,title){
@@ -983,21 +999,93 @@ $('rotateBtn').addEventListener('click',()=>{const b=$('rotateBtn');
   if(b.dataset.arm!=='1'){b.dataset.arm='1';b.textContent='לחצו שוב לאישור';setTimeout(()=>{b.dataset.arm='';b.textContent='החלפת קוד כיתה'},4000);return}
   b.dataset.arm='';b.textContent='החלפת קוד כיתה';
   adminAct('rotateClass',{},'').then(o=>{if(o&&o.ok){classCode=o.code;store('bdach_class',o.code);$('adminMsg').textContent='קוד הכיתה הוחלף. מסרו את הקוד החדש לתלמידים שעוד לא נכנסו.';loadAdmin()}})});
+let ccTimer=null,ccSeq=0;
+function ccMsg(t,k){const m=$('ncCodeMsg');m.textContent=t;m.className='meta'+(k?' '+k:'')}
+$('ncCode').addEventListener('input',()=>{
+  clearTimeout(ccTimer);const n=NORM($('ncCode').value);
+  if(!n){ccMsg('');return}
+  if(n.length<4){ccMsg('צריך לפחות 4 תווים.','badc');return}
+  ccMsg('בודק…');const my=++ccSeq;
+  ccTimer=setTimeout(async()=>{
+    try{const o=await call('checkCode',{code:n});if(my!==ccSeq)return;
+      if(o.free)ccMsg('הקוד פנוי ✓','good');else ccMsg(o.error==='CODE_TAKEN'?'הקוד הזה כבר תפוס.':'קוד לא תקין.','badc')}
+    catch(e){if(my===ccSeq)ccMsg('')}
+  },350);
+});
 $('newClassForm').addEventListener('submit',async e=>{
   e.preventDefault();const err=$('ncErr');err.textContent='';
-  const pin=$('ncPin').value.trim();
+  const pin=$('ncPin').value.trim(),pin2=$('ncPin2').value.trim(),code=NORM($('ncCode').value);
+  if(code&&(code.length<4||code.length>12)){err.textContent=ADMIN_ERR.BAD_CODE;return}
+  if(pin2&&!/^\d{4,6}$/.test(pin2)){err.textContent=ADMIN_ERR.BAD_PIN;return}
   if(!/^\d{4,6}$/.test(pin)){err.textContent='הקוד שלכם הוא 4 עד 6 ספרות.';return}
   $('ncGo').disabled=true;
   try{
-    const o=await call('createClass',{name:$('ncName').value,names:$('ncNames').value,pin});
+    const o=await call('createClass',{name:$('ncName').value,names:$('ncNames').value,pin,code,newPin:pin2});
     if(o.ok){
-      $('ncName').value='';$('ncNames').value='';$('ncPin').value='';
-      showCodes(o.codes,'הכיתה "'+o.cls.name+'" נוצרה. קוד הכיתה: '+o.cls.code+'. מסרו אותו לתלמידים, ואת הקוד האישי של כל אחד לו (הראשון הוא המנהל).');
-      $('adminMsg').textContent='';
+      $('ncName').value='';$('ncNames').value='';$('ncPin').value='';$('ncPin2').value='';$('ncCode').value='';ccMsg('');
+      const box=$('codesOut');box.replaceChildren();lastCodes=o.codes;
+      box.append(el('p','okmsg','הכיתה "'+o.cls.name+'" נוצרה. קוד הכיתה: '+o.cls.code+'. אתם המנהלים שלה.'+(o.codes.length?' מסרו לכל תלמיד את הקוד האישי שלו.':'')));
+      if(o.codes.length){const g=el('div','codes');o.codes.forEach(c=>{const d=el('div','slip');d.append(el('b',null,c.name),el('span','codebox',fmtCode(c.code)));g.append(d)});box.append(g)}
+      const go=el('button',null,'עבור לכיתה החדשה');go.type='button';go.addEventListener('click',()=>switchClass(o.cid,true));box.append(go);
+      $('adminMsg').textContent='';loadMyClasses();
     }else err.textContent=ADMIN_ERR[o.error]==='קוד שגוי.'&&o.left!=null?'קוד שגוי. נשארו '+o.left+' ניסיונות.':(ADMIN_ERR[o.error]||'היצירה נכשלה.');
   }catch(ex){if(!ex||ex.error!=='AUTH')err.textContent='היצירה נכשלה. נסו שוב.'}
   finally{$('ncGo').disabled=false}
 });
+
+/* ---- ריבוי כיתות: רשימה, מעבר מהיר ---- */
+let myCls=[];
+async function loadMyClasses(){
+  if(!token)return;
+  try{const o=await call('myClasses');if(o&&o.classes)myCls=o.classes}catch(e){}
+  updateClsBtn();if(adminOpen)renderMyClasses();
+}
+function updateClsBtn(){$('clsBtn').hidden=!(token&&myCls.length>1);if($('clsBtn').hidden)$('clsMenu').hidden=true}
+async function switchClass(cid,thenAdmin){
+  $('clsMenu').hidden=true;
+  if(!cid)return;
+  try{
+    const o=await call('enterClass',{cid});
+    if(!o||o.error||!o.token){showOffline('המעבר לכיתה נכשל.');return}
+    closeAdmin();profOpen=false;profName=null;$('profView').hidden=true;$('formView').hidden=true;
+    fPilot='';fModel='';flights=[];$('exportBox').hidden=true;$('codesOut').replaceChildren();
+    enterApp(o);showOffline('');
+    if(thenAdmin&&o.admin)openAdmin();
+    window.scrollTo(0,0);
+  }catch(ex){if(!ex||ex.error!=='AUTH')showOffline('אין חיבור. נסו שוב.')}
+}
+function renderMyClasses(){
+  const box=$('myClasses');box.replaceChildren();
+  if(myCls.length<2){box.append(el('p','meta','זו הכיתה היחידה שלכם. כיתה נוספת אפשר ליצור למטה, ואז תוכלו לעבור ביניהן במהירות.'));return}
+  myCls.forEach(c=>{
+    const d=document.createElement('details');d.className='bdach mycls';d.dataset.cid=c.id;if(c.current)d.open=true;
+    const sm=document.createElement('summary');
+    sm.append(el('span',null,c.name+(c.current?' · כאן':'')));
+    const r=el('span','cnt',c.admin?'מנהל':'תלמיד');sm.append(r);
+    if(c.pending){const b=el('span','pbadge',c.pending);b.title='בקשות ממתינות';sm.append(b)}
+    d.append(sm);
+    const body=el('div','mcbody');
+    body.append(el('div','meta',c.students+' תלמידים'));
+    if(c.admin){const row=el('div','row');row.append(el('span',null,'קוד כיתה:'),el('span','codebox',c.code));body.append(row)}
+    const act=el('div','row');
+    if(!c.current){const g=el('button',null,'עבור לכיתה');g.type='button';g.addEventListener('click',()=>switchClass(c.id));act.append(g)}
+    if(c.admin&&!c.current){const g=el('button','ghost','עבור וניהול הכיתה');g.type='button';g.addEventListener('click',()=>switchClass(c.id,true));act.append(g)}
+    if(c.current&&c.admin)body.append(el('div','meta','הגדרות הכיתה הזו מופיעות למטה.'));
+    if(act.children.length)body.append(act);
+    d.append(body);box.append(d);
+  });
+}
+$('clsBtn').addEventListener('click',e=>{
+  e.stopPropagation();const m=$('clsMenu');
+  if(!m.hidden){m.hidden=true;return}
+  m.replaceChildren();
+  myCls.forEach(c=>{const b=el('button',null);b.type='button';b.setAttribute('role','menuitem');if(c.current)b.setAttribute('aria-current','true');
+    b.append(el('span',null,c.name));if(c.pending)b.append(el('span','pbadge',c.pending));else if(c.current)b.append(el('span',null,'✓'));
+    b.addEventListener('click',()=>{if(c.current){m.hidden=true}else switchClass(c.id)});m.append(b)});
+  m.hidden=false;
+});
+document.addEventListener('click',e=>{if(!e.target.closest('#clsMenu'))$('clsMenu').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('clsMenu').hidden=true});
 
 /* ---- איפוס מלא (דורש קוד מנהל) ---- */
 $('resetBtn').addEventListener('click',()=>{$('resetBtn').hidden=true;$('resetForm').hidden=false;$('rstPin').value='';$('rstErr').textContent='';$('rstPin').focus()});
@@ -1441,10 +1529,12 @@ function enterApp(o){
   store('bdach_token',token);
   $('loginView').hidden=true;$('calView').style.display='contents';
   $('who').hidden=false;$('addBtn').hidden=false;$('fab').hidden=false;
+  loadMyClasses();
   if(o.init){if(o.init.editMinutes)editMin=o.init.editMinutes;flights=o.init.flights||[];allNames=o.init.names||[];ver=o.init.v;applyMe({admin:canEdit,pending:o.init.pending||0});setSync(true);render();renderQ();cacheSave();startPolling();flushQueue();return}
   applyMe({admin:canEdit,pending:0});render();renderQ();refresh();startPolling();
 }
 function logout(msg){
+  myCls=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
   profOpen=false;profName=null;$('profView').hidden=true;$('qBanner').hidden=true;store('bdach_cache',null);
   store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
