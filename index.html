@@ -1840,7 +1840,7 @@ function renderNext(){
   if(!f){
     const r=el('div','nf');r.style.borderTop='0';r.style.paddingTop='0';
     r.append(el('span',null,'אין לך טיסה מתוכננת.'));
-    const b=el('button',null,'+ תכנון טיסה');b.type='button';b.addEventListener('click',()=>openForm());r.append(b);
+    const b=el('button',null,'+ תכנון טיסה');b.type='button';b.addEventListener('click',()=>openForm(null,null,'plan'));r.append(b);
     box.append(r);return}
   const t=iso(new Date()),tm=iso(new Date(Date.now()+86400000));
   const when=f.date===t?'היום':f.date===tm?'מחר':fmtDate(f.date);
