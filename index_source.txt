@@ -253,6 +253,97 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 .codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
 .codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
 #printArea{display:none}
+/* ---- ניווט תחתון בטלפון, כרטיס הטיסה הבאה, מקומות ---- */
+#tabbar{display:none}
+.navico{display:none}
+.who #homeBtn{display:none}
+.nextcard{display:none}
+.btnlink{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:9px;background:var(--accent);color:#fff;font-weight:700;text-decoration:none}
+.btnlink.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600}
+.sphead{margin-bottom:10px}
+.spmode{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.spmode button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.spmode select{width:auto;flex:1;min-width:120px}
+#spMap{height:380px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--bg);position:relative;z-index:0;isolation:isolate}
+#spMap:empty{display:none}
+.sppick{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:6px 10px;margin-bottom:8px;font-weight:700}
+.spchips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:none}
+.spchips button{flex:none;min-height:38px;padding:0 12px;border-radius:999px;font-weight:500}
+.spchips button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.splist{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.spcard{display:flex;flex-direction:column;gap:6px;text-align:start;width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:400}
+.spcard.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.spcard .spn{font:700 1.05rem var(--f-display)}
+.sptags{display:flex;gap:6px;flex-wrap:wrap}
+.sptag{font-size:.75rem;background:var(--bg);border-radius:8px;padding:2px 8px;color:var(--ink)}
+.sptag.warn{background:var(--warn-bg);color:var(--warn);font-weight:700}
+.sptag.pend{background:var(--line);color:var(--ink);font-weight:700}
+.sprules{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:0 14px}
+.sprules>summary{cursor:pointer;min-height:48px;display:flex;align-items:center;font-weight:700}
+.sprules ul{margin:0 0 8px;padding-inline-start:18px;line-height:1.7}
+.sprules .btnlink{margin-bottom:12px}
+.splegal{margin-top:12px;text-align:center}
+.spscrim{position:fixed;inset:0;z-index:50;background:rgba(5,12,22,.6);display:flex;align-items:flex-end;justify-content:center}
+.spsheet{background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:88vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:14px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+@media(min-width:651px){.spscrim{align-items:center}.spsheet{border-radius:18px}}
+.spsheet h3{margin:0;font:700 1.25rem var(--f-display)}
+.spstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.spstats div{background:var(--bg);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.spstats small{font-size:.72rem;color:var(--muted)}.spstats b{font:700 1.05rem var(--f-display);font-variant-numeric:tabular-nums}
+.spbtns{display:flex;gap:8px;flex-wrap:wrap}.spbtns>*{flex:1 1 auto}
+.spnote{background:var(--bg);border-radius:10px;padding:10px 12px;white-space:pre-line}
+.spcmt{border-bottom:1px solid var(--line);padding:8px 0;display:flex;flex-direction:column;gap:2px}
+.spcmt:last-child{border-bottom:0}
+.spcmt .row{flex-wrap:nowrap}
+.spaddc{display:flex;gap:8px}.spaddc input{flex:1;min-width:0}
+.spcnt{font-size:.75rem;color:var(--muted);text-align:end;font-variant-numeric:tabular-nums}
+.sptagpick{display:flex;gap:6px;flex-wrap:wrap}
+.sptagpick button{min-height:38px;border-radius:999px;font-weight:500;padding:0 12px}
+.sptagpick button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.spadm{display:flex;flex-direction:column;gap:4px}
+.leaflet-container{font:inherit}
+.spdiv{background:none;border:0}
+.spdot{width:18px;height:18px;border-radius:50%;background:#1a73b8;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.spdot.warn{background:#d6962a}.spdot.pend{background:#8a96a8}.spdot.sel{width:24px;height:24px;background:#0b2540}
+.spme{width:16px;height:16px;border-radius:50%;background:#2e9e6b;border:3px solid #fff;box-shadow:0 0 0 7px rgba(46,158,107,.25)}
+@media(max-width:650px){
+  :root:root:root{--bg:#0a1420;--surface:#0f1e2f;--ink:#e3ecf5;--muted:#8aa2ba;--line:#1d3550;--brand:#0c1826;--brand-ink:#ffffff;--accent:#4fb3ff;
+    --ok:#39d98a;--ok-bg:#123826;--bad:#ff8a80;--bad-bg:#3a1418;--warn:#ffb547;--warn-bg:#3a2c10;--today:#173352;color-scheme:dark}
+  button{color:#0a1420}
+  button.ghost{color:var(--ink)}button.danger{color:var(--bad)}
+  .btnlink{color:#0a1420}.btnlink.ghost{color:var(--ink)}
+  .spmode button[aria-pressed="true"],.spchips button[aria-pressed="true"],.sptagpick button[aria-pressed="true"]{color:#0a1420}
+  header{border-radius:0 0 18px 18px;background:#0c1826;border:1px solid var(--line);border-top:0}
+  .wxcard{background:var(--surface);border-color:var(--line)}
+  .clsmenu{background:#0f1e2f;color:var(--ink);border-color:var(--line)}
+  .clsmenu button:hover,.clsmenu button:focus-visible{background:#13253a}.clsmenu button[aria-current="true"]{background:#173352}
+  #tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:30;background:#0c1826;border-top:1px solid var(--line);
+    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));justify-content:space-around;align-items:center}
+  #tabbar[hidden]{display:none}
+  body.formopen #tabbar{display:none}
+  #tabbar .tb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:0;color:var(--muted);font:500 11px var(--f-body);min-width:58px;min-height:52px;padding:4px 4px;border-radius:12px;position:relative;line-height:1.1}
+  #tabbar .tb[hidden]{display:none}
+  #tabbar .tb[aria-current="page"]{color:var(--accent);font-weight:700}
+  #tabbar .navico{display:block;width:22px;height:22px}
+  #tabbar #fab{position:static;width:58px;height:58px;min-height:58px;border-radius:18px;padding:0;margin-top:-28px;box-shadow:0 8px 20px rgba(79,179,255,.35);background:var(--accent);color:#0a1420;display:flex;align-items:center;justify-content:center}
+  #tabbar #fab[hidden]{display:none}
+  #tabbar #fab .fabt{display:none}
+  #tabbar #fab .fabp{font-size:32px;line-height:1;font-weight:700}
+  #tabbar .pbadge{position:absolute;top:2px;inset-inline-end:8px}
+  .nextcard{display:flex;flex-direction:column;gap:10px;background:linear-gradient(0deg,#1a3a63,#1f4778);border:0;color:#fff;border-radius:20px;padding:14px 16px}
+  .nextcard[hidden]{display:none}
+  .nextcard .nk{display:flex;justify-content:space-between;font-size:.78rem;letter-spacing:.04em;color:#a9c6e8}
+  .nextcard .nm{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .nextcard .nt{font:800 2.3rem/1 var(--f-display)}
+  .nextcard .np{text-align:left;min-width:0}.nextcard .np b{display:block;font:700 1rem var(--f-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nextcard .np span,.nextcard .nsub{font-size:.8rem;color:#a9c6e8}
+  .nextcard .nf{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:2px dashed #3d6699;padding-top:10px;flex-wrap:wrap}
+  .nextcard button{background:#fff;color:#0a1420;min-height:42px;border-radius:12px}
+  .nextcard .badge{background:rgba(255,255,255,.14);color:#fff}
+  #spMap{height:46vh;min-height:260px}
+  #spMap .leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.7)}
+  .sphead #spBack{display:none}
+}
 @media print{
   body>*:not(.wrap),.wrap>*:not(#printArea){display:none!important}   /* ה-printArea יושב בתוך .wrap: אסור להסתיר את ה-.wrap עצמו */
   .wrap{display:block!important;padding:0;gap:0;max-width:none}
@@ -271,7 +362,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       <h1>יומן בד״ח רחפנים</h1>
       <span class="sync" id="sync" role="status"><i></i><span>מתחבר…</span></span>
     </div>
-    <div class="who" id="who" hidden><span id="whoName"></span><button id="clsBtn" type="button" class="ghost" hidden>החלפת כיתה ▾</button><button id="profBtn" type="button" class="ghost">הפרופיל שלי</button><button id="adminBtn" type="button" class="ghost" hidden>ניהול<span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button id="clsBtn" type="button" class="ghost" hidden>החלפת כיתה ▾</button><button id="homeBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg><span class="bl">בית</span></button><button id="spotsBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="bl">מקומות</span></button><button id="profBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><span class="bl">הפרופיל שלי</span></button><button id="adminBtn" type="button" class="ghost tb" hidden><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span class="bl">ניהול</span><span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
     <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
   </header>
   <div id="clsMenu" class="clsmenu" role="menu" hidden></div>
@@ -342,6 +433,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       </div>
       <div id="wxBody" aria-live="polite"></div>
     </div>
+    <div class="panel nextcard" id="nextCard" hidden></div>
     <button type="button" class="ghost calbtn" id="calToggle" aria-expanded="false" aria-controls="calPanel">📅 יומן וסינון</button>
     <div class="panel" id="calPanel" hidden>
       <button type="button" class="ghost fbtn" id="fBtn" aria-expanded="false">סינון</button>
@@ -378,6 +470,23 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <div class="panel" id="detail"></div>
   </section>
 
+  <section id="spotsView" class="panel" hidden>
+    <div class="row sphead"><h3 style="margin:0">מקומות של הכיתה</h3>
+      <div class="row" style="gap:8px"><button type="button" id="spAdd">+ מקום חדש</button><button type="button" class="ghost" id="spBack">חזרה ליומן</button></div></div>
+    <div class="spmode" role="group" aria-label="תצוגה"><button type="button" class="ghost" id="spModeMap" aria-pressed="true">מפה</button><button type="button" class="ghost" id="spModeList" aria-pressed="false">רשימה</button>
+      <select id="spSort" aria-label="מיון"><option value="near">קרוב אליי</option><option value="pop">הכי טסים</option><option value="new">חדשים</option></select></div>
+    <div id="spPickBar" class="sppick" hidden><span>הקישו על המפה במקום החדש</span><button type="button" class="ghost" id="spPickCancel">ביטול</button></div>
+    <div id="spMapBox"><div id="spMap" role="region" aria-label="מפת המקומות"></div><div class="meta" id="spMapMsg" role="status"></div></div>
+    <div class="spchips" id="spChips" role="group" aria-label="סינון לפי תגיות"></div>
+    <div id="spList" class="splist"></div>
+    <details class="sprules"><summary>הכללים בקצרה ובדיקת אזורים</summary>
+      <ul><li>עד 50 מטר גובה מעל הקרקע.</li><li>קו ראייה ישיר לרחפן כל הזמן.</li><li>250 מטר לפחות מאנשים, בתים ומבני ציבור.</li><li>2 ק״מ לפחות משדה תעופה. לא ליד בסיסים, כלא, תחנות כוח וגבולות.</li></ul>
+      <p class="meta">אזורים מוגבלים והתראות בזמן אמת: באפליקציה הרשמית של רת״א.</p>
+      <a class="btnlink" id="spDronesIl" href="https://play.google.com/store/apps/details?id=il.gov.rata" target="_blank" rel="noopener">פתיחת DronesIL</a></details>
+    <p class="meta splegal">מקום ברשימה לא אומר שמותר לטוס בו. בודקים מגבלות לפני כל טיסה.</p>
+  </section>
+  <div id="spSheet" class="spscrim" hidden><div class="spsheet" role="dialog" aria-modal="true" aria-labelledby="spSheetTitle" id="spSheetBody"></div></div>
+
   <section id="adminView" class="panel" hidden>
     <div class="row"><h3 style="margin:0">ניהול</h3><button type="button" class="ghost" id="adminBack">חזרה ליומן</button></div>
     <h4 class="sec-title">הכיתות שלי</h4>
@@ -386,6 +495,14 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <h4 class="sec-title">הכיתה הנוכחית</h4>
     <div class="row"><span>כיתה: <b id="admClass"></b></span><span>קוד כיתה: <span class="codebox" id="admCode"></span></span></div>
     <div class="actions"><button type="button" class="danger" id="rotateBtn">החלפת קוד כיתה</button></div>
+    <h4 class="sec-title">מקומות טיסה</h4>
+    <div id="spotAdmin" class="spadm">
+      <label class="confirm"><input type="checkbox" id="saApprove"> מקום חדש צריך אישור מנהל לפני שהכיתה רואה אותו</label>
+      <label for="saAddBy" style="margin-top:8px">מי יכול להוסיף מקומות</label>
+      <select id="saAddBy"><option value="all">כל הכיתה</option><option value="admins">רק מנהלים</option></select>
+      <label class="confirm"><input type="checkbox" id="saComments"> אפשר לכתוב תגובות על מקומות</label>
+      <div class="meta" id="saMsg" role="status"></div>
+    </div>
     <h4 class="sec-title">בקשות הצטרפות</h4>
     <div id="reqList"></div>
     <h4 class="sec-title">משתמשים</h4>
@@ -427,7 +544,8 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <div id="profBody"></div>
   </section>
   <div id="printArea"></div>
-  <button id="fab" class="fab" type="button" hidden>+ טיסה חדשה</button>
+  <button id="fab" class="fab" type="button" hidden aria-label="טיסה חדשה"><span class="fabp">+</span><span class="fabt"> טיסה חדשה</span></button>
+  <nav id="tabbar" aria-label="ניווט ראשי" hidden></nav>
   <section id="formView" class="panel" hidden>
     <h3 id="formTitle">בד״ח חדש – בדיקות לפני הטסת רחפן</h3>
     <form id="form" novalidate>
@@ -633,6 +751,7 @@ function render(){
     grid.append(b);
   }
   renderDetail(byDate[sel]||[]);
+  renderNext();
 }
 
 function renderDetail(list){
@@ -694,6 +813,7 @@ $('todayB').addEventListener('click',()=>{const n=new Date();viewY=n.getFullYear
 // ---------- form
 function openForm(dateIso,flight){
   if(!token||!uid)return;            // אי אפשר לפתוח טופס בלי להתחבר
+  hideSpots();
   $('form').reset();$('formErr').textContent='';
   const n=new Date();
   const pl=$('pilot');pl.replaceChildren();
@@ -862,7 +982,7 @@ function cacheSave(){
   try{localStorage.setItem('bdach_cache',JSON.stringify({uid:uid,admin:canEdit,className:clsName,names:allNames,editMin:editMin,flights:flights.slice(-400),at:Date.now()}))}catch(e){}
 }
 function cacheLoad(){try{const c=JSON.parse(load('bdach_cache')||'null');return c&&c.uid?c:null}catch(e){return null}}
-const SAFE_RETRY={classInfo:1,login:1,flights:1,adminData:1,requestStatus:1,me:1,geocode:1};
+const SAFE_RETRY={classInfo:1,login:1,flights:1,adminData:1,requestStatus:1,me:1,geocode:1,spots:1};
 function call(action,p){
   const payload=JSON.stringify(Object.assign({action,token,code:classCode},p||{}));
   const done=(r,res,rej)=>{let o;try{o=typeof r==='string'?JSON.parse(r):r}catch(e){return rej(e)}
@@ -897,7 +1017,7 @@ let timer=null,busy=false,ver=null,lastPending=0,adminOpen=false;
 function applyMe(o){
   if(typeof o.admin==='boolean'&&o.admin!==canEdit){canEdit=o.admin;if(!canEdit&&adminOpen)closeAdmin();render()}
   $('whoName').textContent=uid+(clsName?' · '+clsName:'')+(canEdit?' · מנהל':'');
-  $('adminBtn').hidden=!canEdit;$('profBtn').textContent=canEdit?'פרופילים':'הפרופיל שלי';
+  $('adminBtn').hidden=!canEdit;$('profBtn').querySelector('.bl').textContent=canEdit?'פרופילים':'הפרופיל שלי';
   const p=canEdit?(o.pending||0):0;
   $('pendBadge').hidden=!p;$('pendBadge').textContent=p;
   if(adminOpen&&p!==lastPending)loadAdmin();
@@ -921,12 +1041,12 @@ function stopPolling(){if(timer){clearInterval(timer);timer=null}stopCard()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 
 /* ---- admin ---- */
-function openAdmin(){adminOpen=true;profOpen=false;$('profView').hidden=true;$('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=false;$('addBtn').hidden=true;$('fab').hidden=true;$('adminMsg').textContent='';loadAdmin();window.scrollTo(0,0)}
+function openAdmin(){hideSpots();adminOpen=true;profOpen=false;$('profView').hidden=true;$('calView').style.display='none';$('formView').hidden=true;$('adminView').hidden=false;$('addBtn').hidden=true;$('fab').hidden=true;$('adminMsg').textContent='';loadAdmin();window.scrollTo(0,0)}
 function closeAdmin(){adminOpen=false;$('resetForm').hidden=true;$('resetBtn').hidden=false;$('adminView').hidden=true;if(token){$('calView').style.display='contents';$('addBtn').hidden=false;$('fab').hidden=false}}
 $('adminBtn').addEventListener('click',openAdmin);
 $('adminBack').addEventListener('click',closeAdmin);
 async function loadAdmin(){
-  try{const o=await call('adminData');if(o.error){$('adminMsg').textContent='אין הרשאה.';return}renderAdmin(o);loadMyClasses()}
+  try{const o=await call('adminData');if(o.error){$('adminMsg').textContent='אין הרשאה.';return}renderAdmin(o);loadMyClasses();loadSpotAdmin()}
   catch(e){$('adminMsg').textContent='הטעינה נכשלה. נסו שוב.'}
 }
 function armBtn(label,cls,fn){
@@ -1506,7 +1626,7 @@ const PROF_HEAD=['שם','מאושרות','לא מאושרות','בוטלו (לא
 function classRows(){return pilotNames().map(n=>{const s=statsOf(flightsOf(n));return[n,s.ok,s.bad,s.can,s.ok+s.bad,fmtDate(s.last)]})}
 function numCell(v){const td=el('td','num',String(v));return td}
 function openProfile(name){
-  if(!token||!uid)return;
+  if(!token||!uid)return;hideSpots();
   profName=canEdit?(name||null):uid;profOpen=true;
   adminOpen=false;$('adminView').hidden=true;$('resetForm').hidden=true;$('resetBtn').hidden=false;
   $('calView').style.display='none';$('formView').hidden=true;$('addBtn').hidden=true;$('fab').hidden=true;
@@ -1583,18 +1703,285 @@ function setCal(open){$('calPanel').hidden=!open;$('calToggle').setAttribute('ar
 $('calToggle').addEventListener('click',()=>setCal($('calPanel').hidden));
 {const sv=load('bdach_cal2');setCal(sv==null?matchMedia('(max-width:650px)').matches:sv==='1')}   // בטלפון היומן פתוח כברירת מחדל (חודש מלא); במחשב כמו קודם
 
+/* ---- ניווט תחתון בטלפון: הכפתורים של הכותרת עוברים לסרגל, עם אותם מזהים ---- */
+const NAV_IDS=['homeBtn','spotsBtn','fab','profBtn','adminBtn'];
+const navHome={};NAV_IDS.forEach(id=>{const e=$(id),c=document.createComment(id);e.before(c);navHome[id]=c});
+const phoneMQ=matchMedia('(max-width:650px)');
+function placeNav(){
+  const nav=$('tabbar');
+  if(phoneMQ.matches)NAV_IDS.forEach(id=>nav.append($(id)));
+  else NAV_IDS.forEach(id=>navHome[id].after($(id)));
+}
+placeNav();
+if(phoneMQ.addEventListener)phoneMQ.addEventListener('change',placeNav);
+function navState(){
+  const v=id=>!$(id).hidden;
+  const form=v('formView'),spots=v('spotsView'),adm=v('adminView'),prof=v('profView');
+  document.body.classList.toggle('formopen',form);
+  $('tabbar').hidden=!token;
+  const cur=spots?'spotsBtn':adm?'adminBtn':prof?'profBtn':(!form&&token)?'homeBtn':'';
+  ['homeBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>{if(id===cur)$(id).setAttribute('aria-current','page');else $(id).removeAttribute('aria-current')});
+}
+{const mo=new MutationObserver(navState);['calView','spotsView','adminView','profView','formView','who'].forEach(id=>mo.observe($(id),{attributes:true,attributeFilter:['hidden','style']}))}
+$('homeBtn').addEventListener('click',()=>{if(adminOpen)closeAdmin();if(profOpen)closeProfile();if(spotsOpen)closeSpots();window.scrollTo(0,0)});
+
+/* ---- כרטיס "הטיסה הבאה שלך" (בטלפון) ---- */
+const CHECK_TOTAL=SECTIONS.reduce((n,s)=>n+s[1].length,0);
+const placeName=p=>String(p||'').replace(/\s*\(\s*-?[\d.]+\s*,\s*-?[\d.]+\s*\)\s*$/,'').trim()||String(p||'');
+function canEditFlight(f){return !f.pending&&!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)&&Date.now()-(f.createdAt||0)<=editMin*60000))}
+function renderNext(){
+  const box=$('nextCard');
+  if(!token||!uid){box.hidden=true;return}
+  const n=new Date(Date.now()-60*60000);const from=iso(n)+' '+pad(n.getHours())+':'+pad(n.getMinutes());
+  const mine=flights.concat(qPending()).filter(f=>f.pilot===uid&&!f.voided&&f.decision!=='canceled'&&((f.date||'')+' '+(f.time||''))>=from)
+    .sort((a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||'')));
+  box.replaceChildren();box.hidden=false;
+  const f=mine[0];
+  if(!f){
+    const r=el('div','nf');r.style.borderTop='0';r.style.paddingTop='0';
+    r.append(el('span',null,'אין לך טיסה מתוכננת.'));
+    const b=el('button',null,'+ תכנון טיסה');b.type='button';b.addEventListener('click',()=>openForm());r.append(b);
+    box.append(r);return}
+  const t=iso(new Date()),tm=iso(new Date(Date.now()+86400000));
+  const when=f.date===t?'היום':f.date===tm?'מחר':fmtDate(f.date);
+  const k=el('div','nk');k.append(el('span',null,'הטיסה הבאה שלך'),el('span',null,when));
+  const m=el('div','nm');
+  const tt=el('div');tt.append(el('div','nt',f.time||''),el('div','nsub','המראה'));
+  const pl=el('div','np');pl.append(el('b',null,placeName(f.place)),el('span',null,f.model||''));
+  m.append(tt,pl);
+  const done=Object.keys(f.checks||{}).length;
+  const dec=f.pending?['ממתין לשליחה','warn']:(DECISION[f.decision]||['','']);
+  const ft=el('div','nf');const info=el('span','nsub');info.append(el('span','badge',dec[0]),document.createTextNode('  בד״ח: '+done+' מתוך '+CHECK_TOTAL));ft.append(info);
+  const b=el('button');b.type='button';
+  if(canEditFlight(f)){b.textContent=done<CHECK_TOTAL?'להמשיך בד״ח':'פתיחה';b.addEventListener('click',()=>openForm(null,f))}
+  else{b.textContent='פרטים';b.addEventListener('click',()=>{sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();setCal(true);render();$('detail').scrollIntoView({behavior:'smooth',block:'start'})})}
+  ft.append(b);box.append(k,m,ft);
+}
+
+/* ---- מקומות טיסה משותפים: מפה אמיתית (OpenStreetMap), רשימה, תגובות ---- */
+let spotsOpen=false,spData=null,spSel=null,spMode=load('bdach_spmode')||'map',spSort='near',spFilt=new Set(),spMap=null,spLayer=null,spPicking=false,spDraft=null,spLeaflet=null;
+const DRONESIL=/iPhone|iPad|iPod/i.test(navigator.userAgent)?'https://apps.apple.com/il/app/dronesil-%D7%A8%D7%AA-%D7%90/id6475662325':'https://play.google.com/store/apps/details?id=il.gov.rata';
+$('spDronesIl').href=DRONESIL;
+const SP_ERR={FORBIDDEN:'אין הרשאה.',BAD_NAME:'כתבו שם של לפחות 2 אותיות.',BAD_LOC:'בחרו מיקום למקום.',DUP_NAME:'כבר יש מקום בשם הזה.',TOO_MANY:'הגעתם למספר המרבי.',CLOSED:'המנהל סגר תגובות חדשות.',EMPTY:'כתבו משהו.',NOT_FOUND:'המקום כבר לא קיים.'};
+function hideSpots(){if(!spotsOpen&&$('spotsView').hidden)return;spotsOpen=false;spPicking=false;$('spPickBar').hidden=true;$('spotsView').hidden=true;closeSheet()}
+function openSpots(){
+  if(!token)return;
+  if(adminOpen){adminOpen=false;$('adminView').hidden=true;$('resetForm').hidden=true;$('resetBtn').hidden=false}
+  if(profOpen){profOpen=false;profName=null;$('profView').hidden=true}
+  $('formView').hidden=true;$('calView').style.display='none';$('addBtn').hidden=true;$('fab').hidden=false;
+  spotsOpen=true;$('spotsView').hidden=false;window.scrollTo(0,0);
+  if(spData)renderSpots();
+  loadSpots();
+}
+function closeSpots(){hideSpots();if(token){$('calView').style.display='contents';$('addBtn').hidden=false;$('fab').hidden=false}}
+$('spotsBtn').addEventListener('click',openSpots);
+$('spBack').addEventListener('click',closeSpots);
+async function loadSpots(){
+  try{const o=await call('spots');if(!o||o.error)throw o;spData=o;if(spotsOpen)renderSpots()}
+  catch(e){if(spotsOpen&&!spData)$('spList').replaceChildren(el('p','meta','לא הצלחנו לטעון את המקומות. בדקו חיבור ונסו שוב.'))}
+}
+const spRef=()=>wxLoc?{lat:wxLoc.lat,lng:wxLoc.lng}:null;
+function spDist(sp){const r=spRef();return r?distKm(r.lat,r.lng,sp.lat,sp.lng):null}
+const fmtKm=d=>d==null?'':(d<10?d.toFixed(1):String(Math.round(d)))+' ק״מ';
+function spVisible(){
+  if(!spData)return[];
+  const a=spData.spots.filter(s=>[...spFilt].every(t=>s.tags.includes(t)));
+  if(spSort==='near')a.sort((x,y)=>(spDist(x)??1e9)-(spDist(y)??1e9));
+  else if(spSort==='pop')a.sort((x,y)=>y.flights-x.flights||y.votes-x.votes);
+  else a.sort((x,y)=>y.createdAt-x.createdAt);
+  return a;
+}
+function setSpMode(m){spMode=m;store('bdach_spmode',m);renderSpots()}
+$('spModeMap').addEventListener('click',()=>setSpMode('map'));
+$('spModeList').addEventListener('click',()=>setSpMode('list'));
+$('spSort').addEventListener('change',e=>{spSort=e.target.value;renderSpots()});
+function renderSpots(){
+  if(!spData)return;
+  $('spAdd').hidden=!spData.canAdd;
+  $('spModeMap').setAttribute('aria-pressed',String(spMode==='map'));$('spModeList').setAttribute('aria-pressed',String(spMode==='list'));
+  $('spMapBox').hidden=spMode!=='map';
+  const ch=$('spChips');ch.replaceChildren();
+  (spData.tags||[]).forEach(t=>{const b=el('button','ghost',t);b.type='button';b.setAttribute('aria-pressed',String(spFilt.has(t)));b.addEventListener('click',()=>{spFilt.has(t)?spFilt.delete(t):spFilt.add(t);renderSpots()});ch.append(b)});
+  const vs=spVisible();
+  const l=$('spList');l.replaceChildren();
+  if(!spData.spots.length)l.append(el('p','meta',spData.canAdd?'עוד אין מקומות. הוסיפו את המקום הראשון שלכם עם "+ מקום חדש".':'עוד אין מקומות.'));
+  else if(!vs.length)l.append(el('p','meta','אין מקומות שמתאימים לסינון.'));
+  vs.forEach(sp=>{
+    const c=el('button','spcard'+(sp.id===spSel?' sel':''));c.type='button';c.dataset.id=sp.id;
+    const r=el('div','row');r.append(el('span','spn',sp.name),el('span','meta',fmtKm(spDist(sp))));c.append(r);
+    c.append(el('span','meta',[sp.flights+' טיסות',sp.last?'אחרונה '+fmtDate(sp.last):'',sp.votes?sp.votes+' ממליצים':'',sp.comments.length?sp.comments.length+' תגובות':''].filter(Boolean).join(' · ')));
+    const tg=el('div','sptags');
+    if(sp.status==='pending')tg.append(el('span','sptag pend','ממתין לאישור מנהל'));
+    if(sp.warn)tg.append(el('span','sptag warn','⚠ לשים לב'));
+    sp.tags.forEach(t=>tg.append(el('span','sptag',t)));
+    if(tg.children.length)c.append(tg);
+    c.addEventListener('click',()=>openSpot(sp.id));
+    l.append(c);
+  });
+  if(spMode==='map')drawMap(vs);
+}
+function ensureLeaflet(){
+  if(window.L)return Promise.resolve(window.L);
+  if(spLeaflet)return spLeaflet;
+  spLeaflet=new Promise((res,rej)=>{
+    const css=document.createElement('link');css.rel='stylesheet';css.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.append(css);
+    const js=document.createElement('script');js.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+    js.onload=()=>window.L?res(window.L):rej(new Error('no L'));js.onerror=()=>{spLeaflet=null;rej(new Error('load'))};
+    document.head.append(js);setTimeout(()=>rej(new Error('timeout')),15000);
+  });
+  return spLeaflet;
+}
+async function drawMap(vs){
+  const msg=$('spMapMsg');
+  let L;try{L=await ensureLeaflet()}catch(e){msg.textContent='המפה לא נטענה (אין חיבור?). אפשר לעבור לרשימה.';return}
+  msg.textContent='';
+  if(!spMap){
+    const r=spRef()||{lat:31.77,lng:35.21};
+    spMap=L.map('spMap',{zoomControl:true}).setView([r.lat,r.lng],spRef()?13:8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(spMap);
+    spLayer=L.layerGroup().addTo(spMap);
+    spMap.on('click',e=>{if(!spPicking)return;spPicking=false;$('spPickBar').hidden=true;openAddSpot({lat:e.latlng.lat,lng:e.latlng.lng})});
+    spMap._fitted=false;
+  }
+  setTimeout(()=>spMap.invalidateSize(),50);
+  spLayer.clearLayers();
+  const pts=[];
+  const r=spRef();if(r){L.marker([r.lat,r.lng],{icon:L.divIcon({className:'spdiv',html:'<div class="spme"></div>',iconSize:[16,16]}),keyboard:false,title:'המיקום שלך'}).addTo(spLayer);pts.push([r.lat,r.lng])}
+  vs.forEach(sp=>{
+    const cls='spdot'+(sp.status==='pending'?' pend':sp.warn?' warn':'')+(sp.id===spSel?' sel':'');
+    const sz=sp.id===spSel?24:18;
+    const m=L.marker([sp.lat,sp.lng],{icon:L.divIcon({className:'spdiv',html:'<div class="'+cls+'"></div>',iconSize:[sz,sz]}),title:sp.name,alt:sp.name}).addTo(spLayer);
+    m.on('click',()=>openSpot(sp.id));pts.push([sp.lat,sp.lng]);
+  });
+  if(!spMap._fitted&&pts.length>1){spMap.fitBounds(pts,{padding:[30,30],maxZoom:15});spMap._fitted=true}
+}
+function closeSheet(){$('spSheet').hidden=true;$('spSheetBody').replaceChildren()}
+$('spSheet').addEventListener('click',e=>{if(e.target===$('spSheet'))closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('spSheet').hidden)closeSheet()});
+function sheet(build){const b=$('spSheetBody');b.replaceChildren();build(b);$('spSheet').hidden=false;const f=b.querySelector('input,button');if(f)f.focus()}
+function linkBtn(text,href,cls){const a=el('a','btnlink'+(cls?' '+cls:''),text);a.href=href;a.target='_blank';a.rel='noopener';return a}
+async function spAct(action,p){
+  try{const o=await call(action,p);if(o&&o.error){showOffline(SP_ERR[o.error]||'הפעולה נכשלה.');return null}return o}
+  catch(e){if(!e||e.error!=='AUTH')showOffline('אין חיבור. נסו שוב.');return null}
+}
+function openSpot(id){
+  const sp=spData&&spData.spots.find(x=>x.id===id);if(!sp)return;
+  spSel=id;if(spMode==='map'&&spMap)drawMap(spVisible());
+  sheet(b=>{
+    const h=el('div','row');const t=el('h3',null,sp.name);t.id='spSheetTitle';const x=el('button','ghost','סגירה');x.type='button';x.addEventListener('click',closeSheet);h.append(t,x);b.append(h);
+    b.append(el('div','meta',[fmtKm(spDist(sp)),'נוסף ע״י '+sp.by].filter(Boolean).join(' · ')));
+    if(sp.status==='pending'){
+      if(canEdit){const a=el('div','alert');a.append(el('div',null,'המקום ממתין לאישור. הכיתה עוד לא רואה אותו.'));const r=el('div','spbtns');r.style.marginTop='8px';
+        const ok=el('button',null,'אישור');ok.type='button';ok.addEventListener('click',async()=>{if(await spAct('spotApprove',{id:sp.id,ok:true})){closeSheet();loadSpots()}});
+        const no=el('button','danger','דחייה');no.type='button';no.addEventListener('click',async()=>{if(await spAct('spotApprove',{id:sp.id,ok:false})){closeSheet();loadSpots()}});
+        r.append(ok,no);a.append(r);b.append(a)}
+      else b.append(el('div','alert','המקום ממתין לאישור של מנהל הכיתה. רק את/ה רואה אותו כרגע.'))}
+    if(sp.warn)b.append(el('div','alert','⚠ '+sp.warn));
+    if(sp.tags.length){const tg=el('div','sptags');sp.tags.forEach(t2=>tg.append(el('span','sptag',t2)));b.append(tg)}
+    if(sp.note)b.append(el('div','spnote',sp.note));
+    const st=el('div','spstats');[['טיסות',sp.flights],['אחרונה',sp.last?fmtDate(sp.last):'—'],['ממליצים',sp.votes],['תגובות',sp.comments.length]].forEach(([k,v])=>{const d=el('div');d.append(el('small',null,k),el('b',null,String(v)));st.append(d)});b.append(st);
+    const r1=el('div','spbtns');
+    const fly=el('button',null,'טיסה חדשה כאן');fly.type='button';
+    fly.addEventListener('click',()=>{closeSheet();openForm();$('place').value=sp.name+' ('+sp.lat.toFixed(5)+', '+sp.lng.toFixed(5)+')';wxP=fetchFormWx(true)});
+    r1.append(fly);
+    if(sp.status==='ok'){const v=el('button','ghost',(sp.myVote?'✓ ':'')+'ממליץ/ה ('+sp.votes+')');v.type='button';v.setAttribute('aria-pressed',String(sp.myVote));
+      v.addEventListener('click',async()=>{v.disabled=true;const o=await spAct('spotVote',{id:sp.id});v.disabled=false;if(o){sp.votes=o.votes;sp.myVote=o.myVote;v.textContent=(sp.myVote?'✓ ':'')+'ממליץ/ה ('+sp.votes+')';v.setAttribute('aria-pressed',String(sp.myVote));renderSpots()}});r1.append(v)}
+    b.append(r1);
+    const r2=el('div','spbtns');
+    r2.append(linkBtn('Waze','https://waze.com/ul?ll='+sp.lat+','+sp.lng+'&navigate=yes','ghost'),linkBtn('Google Maps','https://www.google.com/maps/dir/?api=1&destination='+sp.lat+','+sp.lng,'ghost'),linkBtn('בדיקה ב-DronesIL',DRONESIL,'ghost'));
+    b.append(r2);
+    if(sp.status==='ok'){
+      b.append(el('h3',null,'תגובות'));
+      const cl=el('div');
+      if(!sp.comments.length)cl.append(el('p','meta','עוד אין תגובות. ספרו איך היה: רוח, אנשים, חניה.'));
+      sp.comments.forEach(c=>{const d=el('div','spcmt');const r=el('div','row');
+        r.append(el('span',null,''),el('span','meta',new Date(c.at).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})));
+        r.firstChild.append(el('b',null,c.by));
+        d.append(r,el('div',null,c.text));
+        if(canEdit||c.by===uid)d.append(armBtn('מחיקת התגובה','danger',async()=>{if(await spAct('spotCmtDel',{id:c.id})){sp.comments=sp.comments.filter(x=>x.id!==c.id);openSpot(sp.id);loadSpots()}}));
+        cl.append(d)});
+      b.append(cl);
+      if(spData.settings.comments){
+        const f=el('form','spaddc');f.noValidate=true;const i=document.createElement('input');i.id='spCmtIn';i.maxLength=200;i.placeholder='איך היה? רוח, אנשים, חניה…';i.setAttribute('aria-label','תגובה חדשה');i.autocomplete='off';
+        const go=el('button',null,'שליחה');go.type='submit';f.append(i,go);
+        const cnt=el('div','spcnt','0/200');i.addEventListener('input',()=>{cnt.textContent=i.value.length+'/200'});
+        f.addEventListener('submit',async e=>{e.preventDefault();const tx=i.value.trim();if(!tx)return;go.disabled=true;const o=await spAct('spotComment',{id:sp.id,text:tx});go.disabled=false;
+          if(o){sp.comments.push({id:o.id,by:uid,text:tx,at:Date.now()});openSpot(sp.id);loadSpots()}});
+        b.append(f,cnt);
+      }else b.append(el('p','meta','מנהל הכיתה סגר תגובות חדשות.'));
+    }
+    if(canEdit||sp.by===uid)b.append(armBtn('מחיקת המקום','danger',async()=>{if(await spAct('spotDel',{id:sp.id})){closeSheet();spSel=null;loadSpots()}}));
+    b.append(el('p','meta','מקום ברשימה לא אומר שמותר לטוס בו. בודקים מגבלות לפני כל טיסה.'));
+  });
+}
+function openAddSpot(loc){
+  const d=spDraft||{name:'',tags:[],note:'',warn:''};if(loc){d.lat=loc.lat;d.lng=loc.lng}spDraft=d;
+  sheet(b=>{
+    const h=el('div','row');const t=el('h3',null,'מקום חדש');t.id='spSheetTitle';const x=el('button','ghost','ביטול');x.type='button';x.addEventListener('click',()=>{spDraft=null;closeSheet()});h.append(t,x);b.append(h);
+    if(spData&&spData.settings.approve&&!canEdit)b.append(el('div','meta','המקום יופיע לכיתה אחרי אישור של מנהל.'));
+    const f=el('form');f.noValidate=true;f.style.display='flex';f.style.flexDirection='column';f.style.gap='6px';
+    const l1=el('label',null,'שם המקום');l1.htmlFor='spName';const n=document.createElement('input');n.id='spName';n.maxLength=40;n.autocomplete='off';n.placeholder='למשל: השדה ליד המחסן';n.value=d.name;n.addEventListener('input',()=>{d.name=n.value});
+    const l2=el('label',null,'מיקום');
+    const loc2=el('div','meta',d.lat!=null?'נבחר מיקום: '+(+d.lat).toFixed(5)+', '+(+d.lng).toFixed(5):'עוד לא נבחר מיקום.');loc2.id='spLocTxt';
+    const lr=el('div','spbtns');
+    const me=el('button','ghost','המיקום שלי עכשיו');me.type='button';
+    me.addEventListener('click',()=>{if(!navigator.geolocation){loc2.textContent='המכשיר לא תומך במיקום. בחרו על המפה.';return}
+      loc2.textContent='מבקש גישה למיקום…';
+      try{navigator.geolocation.getCurrentPosition(p=>{d.lat=p.coords.latitude;d.lng=p.coords.longitude;loc2.textContent='נבחר מיקום: '+d.lat.toFixed(5)+', '+d.lng.toFixed(5)},
+        er=>{loc2.textContent=er&&er.code===1?'לא אישרתם גישה למיקום. בחרו על המפה.':'לא הצלחנו לקבל מיקום. בחרו על המפה.'},{enableHighAccuracy:true,timeout:10000,maximumAge:30000})}catch(e){loc2.textContent='לא הצלחנו לקבל מיקום.'}});
+    const pick=el('button','ghost','בחירה על המפה');pick.type='button';
+    pick.addEventListener('click',()=>{closeSheet();if(spMode!=='map')setSpMode('map');spPicking=true;$('spPickBar').hidden=false;$('spMapBox').scrollIntoView({behavior:'smooth',block:'center'})});
+    lr.append(me,pick);
+    const l3=el('label',null,'מה יש שם');
+    const tp=el('div','sptagpick');(spData?spData.tags:[]).forEach(tg=>{const bt=el('button','ghost',tg);bt.type='button';bt.setAttribute('aria-pressed',String(d.tags.includes(tg)));bt.addEventListener('click',()=>{const i=d.tags.indexOf(tg);if(i<0)d.tags.push(tg);else d.tags.splice(i,1);bt.setAttribute('aria-pressed',String(i<0))});tp.append(bt)});
+    const l4=el('label',null,'טיפ לשאר הכיתה');l4.htmlFor='spNote';const nt=document.createElement('textarea');nt.id='spNote';nt.maxLength=200;nt.placeholder='מאיפה להמריא, מתי ריק, ממה להיזהר';nt.value=d.note;
+    const c4=el('div','spcnt',d.note.length+'/200');nt.addEventListener('input',()=>{d.note=nt.value;c4.textContent=nt.value.length+'/200'});
+    const l5=el('label',null,'משהו לשים לב אליו? (לא חובה)');l5.htmlFor='spWarn';const w=document.createElement('input');w.id='spWarn';w.maxLength=200;w.autocomplete='off';w.placeholder='קווי חשמל, שדה תעופה, אנשים, אזור צבאי';w.value=d.warn;w.addEventListener('input',()=>{d.warn=w.value});
+    const er=el('div','err');er.setAttribute('role','alert');
+    const al=el('div','alert','המקום לא אומר שמותר לטוס בו. בודקים מגבלות לפני כל טיסה.');
+    const go=el('button',null,'הוספת המקום');go.type='submit';go.id='spSave';
+    f.append(l1,n,l2,loc2,lr,l3,tp,l4,nt,c4,l5,w,al,er,go);
+    f.addEventListener('submit',async e=>{e.preventDefault();er.textContent='';
+      if(d.name.trim().length<2){er.textContent=SP_ERR.BAD_NAME;return}
+      if(d.lat==null){er.textContent=SP_ERR.BAD_LOC;return}
+      go.disabled=true;
+      try{const o=await call('spotAdd',{name:d.name.trim(),lat:d.lat,lng:d.lng,tags:d.tags,note:d.note.trim(),warn:d.warn.trim()});
+        if(o.error){er.textContent=SP_ERR[o.error]||'ההוספה נכשלה.';return}
+        spDraft=null;closeSheet();showOffline('');spSel=o.id;
+        $('banner').hidden=true;await loadSpots();
+        if(o.status==='pending')showOffline('המקום נשלח לאישור המנהל.');
+      }catch(ex){if(!ex||ex.error!=='AUTH')er.textContent='אין חיבור. נסו שוב.'}
+      finally{go.disabled=false}});
+    b.append(f);
+  });
+}
+$('spAdd').addEventListener('click',()=>openAddSpot());
+$('spPickCancel').addEventListener('click',()=>{spPicking=false;$('spPickBar').hidden=true});
+/* הגדרות מקומות במסך הניהול */
+async function loadSpotAdmin(){
+  try{const o=await call('spots');if(!o||o.error)return;spData=o;const s=o.settings;
+    $('saApprove').checked=s.approve;$('saAddBy').value=s.addBy;$('saComments').checked=s.comments;
+    const pend=o.spots.filter(x=>x.status==='pending').length;$('saMsg').textContent=pend?pend+' מקומות ממתינים לאישור (בלשונית מקומות).':'';
+  }catch(e){}
+}
+async function saveSpotAdmin(){
+  const o=await spAct('spotSettings',{approve:$('saApprove').checked,addBy:$('saAddBy').value,comments:$('saComments').checked});
+  if(o){$('saMsg').textContent='נשמר.';if(spData)spData.settings=o.settings}
+}
+['saApprove','saAddBy','saComments'].forEach(id=>$(id).addEventListener('change',saveSpotAdmin));
+
 /* ---- session ---- */
 function enterApp(o){
   token=o.token||token;uid=o.name;canEdit=!!o.admin;ver=null;lastPending=0;clsName=o.className||clsName;
   store('bdach_token',token);
   $('loginView').hidden=true;$('calView').style.display='contents';
   $('who').hidden=false;$('addBtn').hidden=false;$('fab').hidden=false;
-  loadMyClasses();
+  loadMyClasses();spData=null;spSel=null;spMap&&spMap._fitted!==undefined&&(spMap._fitted=false);navState();
   if(o.init){if(o.init.editMinutes)editMin=o.init.editMinutes;flights=o.init.flights||[];allNames=o.init.names||[];ver=o.init.v;applyMe({admin:canEdit,pending:o.init.pending||0});setSync(true);render();renderQ();cacheSave();startPolling();flushQueue();return}
   applyMe({admin:canEdit,pending:0});render();renderQ();refresh();startPolling();
 }
 function logout(msg){
-  myCls=[];myDel=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;
+  myCls=[];myDel=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;hideSpots();spData=null;
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
   profOpen=false;profName=null;$('profView').hidden=true;$('qBanner').hidden=true;store('bdach_cache',null);
   store('bdach_token',null);stopPolling();flights=[];fPilot='';fModel='';$('exportBox').hidden=true;
