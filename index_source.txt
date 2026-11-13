@@ -254,6 +254,29 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 .codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
 .codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
 #printArea{display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.quick .qtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.qprog{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.qprog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.qstep{display:flex;flex-direction:column;gap:12px}
+.qfields{grid-template-columns:1fr}
+.qbig{min-height:60px;border-radius:16px;font:700 1.1rem var(--f-display);width:100%}
+.qbig.ok{background:var(--ok);color:#06210f}.qbig.bad{background:transparent;color:var(--bad);border:2px solid var(--bad)}
+.qbig:disabled{opacity:.45}
+.qbtns{display:flex;flex-direction:column;gap:10px}
+.qnum{font:700 .9rem var(--f-display);color:var(--muted)}
+.qtitle{font:800 1.8rem/1.15 var(--f-display);text-wrap:balance}
+.qlabel{font-size:1.05rem;color:var(--ink);opacity:.85;min-height:3em}
+.qlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.qlist button{width:100%;display:flex;justify-content:space-between;align-items:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;min-height:48px;font-weight:600}
+.qlist .v.ok{color:var(--ok)}.qlist .v.bad{color:var(--bad)}.qlist .v.na{color:var(--muted)}
+.spsearch{display:flex;gap:8px;margin-bottom:8px}.spsearch input{flex:1;min-width:0}
+.spresults{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.spres{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface)}
+button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-height:52px}
+.spres .t{flex:1;min-width:0}.spres .t b{display:block}.spres .t span{font-size:.8rem;color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pptabs{display:flex;gap:6px}.pptabs button{flex:1;min-height:42px}.pptabs button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#ppMap{height:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;z-index:0;isolation:isolate}
+.badge.quickb{background:var(--line);color:var(--ink)}
 .quickhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 6px}
 #formView[data-mode="now"] #sections .check[data-q="0"],#formView[data-mode="now"] #sections .sec[data-q="0"],#formView[data-mode="now"] #bdach>summary{display:none}
 #formView[data-mode="now"] #sections .sec>summary{display:none}
@@ -363,6 +386,8 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
   #whoName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #clsBtn{flex:none;padding:0 10px;min-height:40px}
   .chip.plan,.badge.plan{background:#2a2552;color:#c9c0ff}
+  .pptabs button[aria-pressed="true"]{color:#0a1420}
+  #ppMap .leaflet-tile{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.9) saturate(.7)}
 }
 @media print{
   body>*:not(.wrap),.wrap>*:not(#printArea){display:none!important}   /* ה-printArea יושב בתוך .wrap: אסור להסתיר את ה-.wrap עצמו */
@@ -495,6 +520,8 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
       <div class="row" style="gap:8px"><button type="button" id="spAdd">+ מקום חדש</button><button type="button" class="ghost" id="spBack">חזרה ליומן</button></div></div>
     <div class="spmode" role="group" aria-label="תצוגה"><button type="button" class="ghost" id="spModeMap" aria-pressed="true">מפה</button><button type="button" class="ghost" id="spModeList" aria-pressed="false">רשימה</button><button type="button" class="ghost" id="spLocate">📍 איפה אני</button>
       <select id="spSort" aria-label="מיון"><option value="near">קרוב אליי</option><option value="pop">הכי טסים</option><option value="new">חדשים</option></select></div>
+    <form class="spsearch" id="spSearchForm" role="search"><label for="spSearch" class="sr">חיפוש</label><input id="spSearch" type="search" autocomplete="off" placeholder="חיפוש: מקום של הכיתה, ישוב או כתובת"><button type="submit" id="spSearchGo">חיפוש</button></form>
+    <div id="spResults" class="spresults" hidden></div>
     <div id="spPickBar" class="sppick" hidden><span>הקישו על המפה במקום החדש</span><button type="button" class="ghost" id="spPickCancel">ביטול</button></div>
     <div id="spMapBox"><div id="spMap" role="region" aria-label="מפת המקומות"></div><div class="meta" id="spMapMsg" role="status"></div></div>
     <div class="spchips" id="spChips" role="group" aria-label="סינון לפי תגיות"></div>
@@ -515,6 +542,8 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
     <h4 class="sec-title">הכיתה הנוכחית</h4>
     <div class="row"><span>כיתה: <b id="admClass"></b></span><span>קוד כיתה: <span class="codebox" id="admCode"></span></span></div>
     <div class="actions"><button type="button" class="danger" id="rotateBtn">החלפת קוד כיתה</button></div>
+    <h4 class="sec-title">בד״ח</h4>
+    <label class="confirm"><input type="checkbox" id="saQuick"> תלמידים יכולים להשתמש ב"טיסה עכשיו" עם בד״ח מהיר (6 בדיקות)</label>
     <h4 class="sec-title">מקומות טיסה</h4>
     <div id="spotAdmin" class="spadm">
       <label class="confirm"><input type="checkbox" id="saApprove"> מקום חדש צריך אישור מנהל לפני שהכיתה רואה אותו</label>
@@ -567,6 +596,31 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
   <div id="printArea"></div>
   <button id="fab" class="fab" type="button" hidden aria-label="טיסה חדשה"><span class="fabp">+</span><span class="fabt"> טיסה חדשה</span></button>
   <nav id="tabbar" aria-label="ניווט ראשי" hidden></nav>
+  <section id="quickView" class="panel quick" hidden aria-labelledby="qH">
+    <div class="qtop"><button type="button" class="ghost" id="qBack">‹ חזרה</button><div class="qprog" aria-hidden="true"><i id="qBar"></i></div><button type="button" class="ghost" id="qClose">ביטול</button></div>
+    <div id="qStep0" class="qstep">
+      <h3 id="qH">טיסה עכשיו</h3>
+      <p class="meta">דגם ומקום, מזג האוויר נבדק לבד, ואז בד״ח מהיר בשטח.</p>
+      <div id="qFields" class="fields qfields"></div>
+      <div id="qErr0" class="err" role="alert"></div>
+      <button type="button" class="qbig" id="qStart">התחלת בד״ח מהיר</button>
+    </div>
+    <div id="qCheck" class="qstep" hidden>
+      <div class="qnum" id="qNum"></div>
+      <div class="qtitle" id="qTitle"></div>
+      <div class="qlabel" id="qLabel"></div>
+      <div class="qbtns"><button type="button" class="qbig ok" id="qOk">✓ תקין</button><button type="button" class="qbig bad" id="qBad">✗ לא תקין</button></div>
+    </div>
+    <div id="qSum" class="qstep" hidden>
+      <h3>סיכום הבד״ח</h3>
+      <ul id="qList" class="qlist"></ul>
+      <div id="qWx"></div>
+      <div id="qRedBox" hidden><label for="qReason"><b>מזג האוויר אדום.</b> כדי לאשר המראה כתבו מדוע התנאים בטוחים *</label><textarea id="qReason" rows="2" maxlength="200"></textarea></div>
+      <label class="confirm"><input type="checkbox" id="qConfirm"> ביצעתי את הבדיקות וסימנתי תשובות אמיתיות</label>
+      <div class="qbtns"><button type="button" class="qbig ok" id="qGo">מאושר להמראה</button><button type="button" class="qbig bad" id="qNoGo">לא מאושר</button></div>
+      <div id="qErr" class="err" role="alert"></div>
+    </div>
+  </section>
   <section id="formView" class="panel" hidden>
     <h3 id="formTitle">בד״ח חדש – בדיקות לפני הטסת רחפן</h3>
     <form id="form" novalidate>
@@ -578,6 +632,7 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
           <input id="modelOther" maxlength="100" autocomplete="off" placeholder="הקלידו את שם הרחפן המלא" hidden style="margin-top:8px"></div>
         <div><label for="place">מיקום ההטסה *</label>
           <div class="placeRow"><input id="place" required autocomplete="off" placeholder="כתבו מקום"><button type="button" class="ghost" id="geoBtn">מיקום נוכחי</button></div>
+          <button type="button" class="ghost" id="pickPlace" style="margin-top:6px">בחירת מקום: מקומות הכיתה, חיפוש או סימון במפה</button>
           <div id="geoMsg" class="meta" role="status"></div>
           <button type="button" class="ghost" id="wxBtn" style="margin-top:6px">בדיקת מזג אוויר</button>
           <div id="wxMsg" role="status"></div>
@@ -792,6 +847,7 @@ function renderDetail(list){
     const r1=el('div','row');
     const dec=f.pending?[f.qerr?'לא נשלח':'ממתין לשליחה','warn']:f.voided?['הרישום בוטל','bad']:(DECISION[f.decision]||['','']);
     r1.append(el('b',null,(f.time||'')+'  ·  '+(f.pilot||'')),el('span','badge '+dec[1],dec[0]));
+    if(f.mode==='quick'&&!f.pending)r1.append(el('span','badge quickb','בד״ח מהיר'));
     box.append(r1);
     box.append(el('div','meta',[f.model,f.place,f.group].filter(Boolean).join('  ·  ')));
     const fails=Object.entries(f.checks||{}).filter(([,v])=>v==='לא תקין').map(([k])=>LABELS[k]||k);
@@ -827,7 +883,7 @@ function renderDetail(list){
       box.append(vb)}
     if(f.decision==='planned'&&!f.pending&&!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)))){
       const r=el('div','calrow');
-      if(canFly()){const go=el('button',null,'לטוס עכשיו · בד״ח מהיר');go.type='button';go.addEventListener('click',()=>openForm(null,f,'now'));r.append(go)}
+      if(canFly()){const q=quickAllowed();const go=el('button',null,'לטוס עכשיו · '+(q?'בד״ח מהיר':'בד״ח מלא'));go.type='button';go.addEventListener('click',()=>openForm(null,f,q?'now':'full'));r.append(go)}
       const ed=el('button','ghost','עריכת התכנון');ed.type='button';ed.addEventListener('click',()=>openForm(null,f,'plan'));
       const cal=el('button','ghost','הוספה ליומן שלי');cal.type='button';cal.addEventListener('click',()=>showPlanSaved(f,true));
       r.append(ed,cal);box.append(r);
@@ -861,9 +917,10 @@ function openForm(dateIso,flight,mode){
   $('redReason').value='';$('redWrap').hidden=true;formCid=Math.random().toString(36).slice(2)+Date.now().toString(36);editingId=null;wxText='';$('wxMsg').replaceChildren();$('formTitle').textContent='בד״ח חדש – בדיקות לפני הטסת רחפן';$('saveBtn').textContent='שמירה ביומן';
   setFormMode(mode||(flight&&flight.decision==='planned'?'plan':'full'),flight);
   if(flight)fillForm(flight);
-  if(flight&&flight.decision==='planned'&&formMode!=='plan'){$('decision').value='';const n2=new Date();$('date').value=iso(n2);$('time').value=pad(n2.getHours())+':'+pad(n2.getMinutes());$('formTitle').textContent='טיסה עכשיו – בד״ח מהיר';$('saveBtn').textContent='שמירה ביומן';wxP=fetchFormWx(true)}
+  if(flight&&flight.decision==='planned'&&formMode!=='plan'){$('decision').value='';const n2=new Date();$('date').value=iso(n2);$('time').value=pad(n2.getHours())+':'+pad(n2.getMinutes());$('formTitle').textContent=formMode==='now'?'טיסה עכשיו – בד״ח מהיר':'בד״ח מלא';$('saveBtn').textContent='שמירה ביומן';wxP=fetchFormWx(true)}
   if(flight){if(formMode==='plan')$('formTitle').textContent='עריכת התכנון'}
   else if(wxLoc){$('place').value=wxLoc.name+' ('+wxLoc.lat+', '+wxLoc.lng+')';wxP=fetchFormWx(true)}   // אותו מיקום כמו בכרטיס, בלי לכייל מחדש
+  if(formMode==='now')openQuick();
   window.scrollTo(0,0);
 }
 function fillForm(f){
@@ -879,7 +936,7 @@ function fillForm(f){
   if(wxText){const p=wxParse(wxText);if(p.rec){$('wxMsg').append(wxDetails(p.rec));$('redReason').value=p.rec.x||''}else $('wxMsg').append(el('div','wx ok','מזג אוויר שנשמר: '+p.text))}
   applyModelRules();updateProg();syncRed();
 }
-function closeForm(){editingId=null;$('fab').hidden=!token;$('formView').hidden=true;$('calView').style.display='contents';$('addBtn').hidden=false}
+function closeForm(){closeQuick();editingId=null;$('fab').hidden=!token;$('formView').hidden=true;$('calView').style.display='contents';$('addBtn').hidden=false}
 $('addBtn').addEventListener('click',()=>openNew());
 $('fab').addEventListener('click',()=>openNew());
 $('geoBtn').addEventListener('click',()=>{
@@ -955,12 +1012,12 @@ $('form').addEventListener('submit',async e=>{
   }
   const f={pilot:$('pilot').value,model:modelName,place:$('place').value.trim(),
     date:$('date').value,time:$('time').value,checks,comments:$('comments').value.trim(),decision:$('decision').value,
-    weather:wOut,by:uid||null,createdAt:Date.now(),cid:formCid};
+    weather:wOut,by:uid||null,createdAt:Date.now(),cid:formCid,mode:formMode==='now'?'quick':''};
   $('saveBtn').disabled=true;
   try{
     const o=editingId?await call('editFlight',{id:editingId,flight:f}):await call('addFlight',{flight:f});
     if(o&&o.error==='RED_NEEDS_REASON'){syncRed()}
-    if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.',RED_NEEDS_REASON:'מזג האוויר אדום. כדי לאשר המראה כתבו מדוע התנאים בטוחים.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
+    if(o.error){err.textContent=({BAD_APPROVAL:'סומנו בדיקות לא תקינות. אין לאשר המראה.',MISSING:'חסרים שדות חובה.',BAD_DATE:'תאריך או שעה לא תקינים.',QUICK_OFF:'המנהל כיבה את הבד״ח המהיר. השתמשו בבד״ח המלא.',EDIT_EXPIRED:'חלפו '+(o.minutes||15)+' דקות מהרישום, ורק מנהל יכול לערוך. אפשר לבטל את הרישום ולרשום מחדש.',VOIDED:'הרישום בוטל ואי אפשר לערוך אותו.',FORBIDDEN:'אין הרשאה לערוך את הרישום הזה.',NOT_FOUND:'הרישום לא נמצא.',RED_NEEDS_REASON:'מזג האוויר אדום. כדי לאשר המראה כתבו מדוע התנאים בטוחים.'})[o.error]||'השמירה נכשלה. נסו שוב.';return}
     sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();
     const wasPlan=f.decision==='planned';
     closeForm();await refresh();
@@ -1070,6 +1127,7 @@ async function refresh(){
     if(!o.same){flights=o.flights||[];allNames=o.names||[]}
     if(o.className)clsName=o.className;
     if(o.editMinutes)editMin=o.editMinutes;
+    if(typeof o.quick==='boolean')clsQuick=o.quick;
     ver=o.v;applyMe(o);showOffline('');setSync(true);if(!o.same){render();if(profOpen)renderProfile();cacheSave()}
     if(qLoad().some(it=>!it.err))flushQueue()
   }catch(ex){
@@ -1757,13 +1815,13 @@ placeNav();
 if(phoneMQ.addEventListener)phoneMQ.addEventListener('change',placeNav);
 function navState(){
   const v=id=>!$(id).hidden;
-  const form=v('formView'),spots=v('spotsView'),adm=v('adminView'),prof=v('profView');
+  const form=v('formView')||v('quickView'),spots=v('spotsView'),adm=v('adminView'),prof=v('profView');
   document.body.classList.toggle('formopen',form);
   $('tabbar').hidden=!token;
   const cur=spots?'spotsBtn':adm?'adminBtn':prof?'profBtn':(!form&&token)?'homeBtn':'';
   ['homeBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>{if(id===cur)$(id).setAttribute('aria-current','page');else $(id).removeAttribute('aria-current')});
 }
-{const mo=new MutationObserver(navState);['calView','spotsView','adminView','profView','formView','who'].forEach(id=>mo.observe($(id),{attributes:true,attributeFilter:['hidden','style']}))}
+{const mo=new MutationObserver(navState);['calView','spotsView','adminView','profView','formView','quickView','who'].forEach(id=>mo.observe($(id),{attributes:true,attributeFilter:['hidden','style']}))}
 $('homeBtn').addEventListener('click',()=>{if(adminOpen)closeAdmin();if(profOpen)closeProfile();if(spotsOpen)closeSpots();window.scrollTo(0,0)});
 
 /* ---- כרטיס "הטיסה הבאה שלך" (בטלפון) ---- */
@@ -1798,7 +1856,7 @@ function renderNext(){
   if(f.decision==='planned'&&canEditFlight(f)){
     info.lastChild.textContent='  עוד לא נעשה בד״ח';
     const soon=new Date(f.date+'T'+(f.time||'00:00')+':00').getTime()-Date.now()<3*3600000;
-    if(canFly()&&soon){b.textContent='לטוס עכשיו';b.addEventListener('click',()=>openForm(null,f,'now'))}
+    if(canFly()&&soon){b.textContent='לטוס עכשיו';b.addEventListener('click',()=>openForm(null,f,quickAllowed()?'now':'full'))}
     else{b.textContent='עריכה';b.addEventListener('click',()=>openForm(null,f,'plan'))}
     const c=el('button',null,'ליומן');c.type='button';c.addEventListener('click',()=>showPlanSaved(f,true));ft.append(c);
   }else if(canEditFlight(f)){b.textContent=done<CHECK_TOTAL?'להמשיך בד״ח':'פתיחה';b.addEventListener('click',()=>openForm(null,f))}
@@ -1933,7 +1991,7 @@ function openSpot(id){
     const st=el('div','spstats');[['טיסות',sp.flights],['אחרונה',sp.last?fmtDate(sp.last):'—'],['ממליצים',sp.votes],['תגובות',sp.comments.length]].forEach(([k,v])=>{const d=el('div');d.append(el('small',null,k),el('b',null,String(v)));st.append(d)});b.append(st);
     const r1=el('div','spbtns');
     const fly=el('button',null,'טיסה חדשה כאן');fly.type='button';
-    fly.addEventListener('click',()=>{closeSheet();openForm(null,null,canFly()?'now':'plan');$('place').value=sp.name+' ('+sp.lat.toFixed(5)+', '+sp.lng.toFixed(5)+')';wxP=fetchFormWx(true)});
+    fly.addEventListener('click',()=>{closeSheet();openForm(null,null,canFly()?(quickAllowed()?'now':'full'):'plan');$('place').value=sp.name+' ('+sp.lat.toFixed(5)+', '+sp.lng.toFixed(5)+')';wxP=fetchFormWx(true)});
     r1.append(fly);
     if(sp.status==='ok'){const v=el('button','ghost',(sp.myVote?'✓ ':'')+'ממליץ/ה ('+sp.votes+')');v.type='button';v.setAttribute('aria-pressed',String(sp.myVote));
       v.addEventListener('click',async()=>{v.disabled=true;const o=await spAct('spotVote',{id:sp.id});v.disabled=false;if(o){sp.votes=o.votes;sp.myVote=o.myVote;v.textContent=(sp.myVote?'✓ ':'')+'ממליץ/ה ('+sp.votes+')';v.setAttribute('aria-pressed',String(sp.myVote));renderSpots()}});r1.append(v)}
@@ -2011,15 +2069,15 @@ $('spPickCancel').addEventListener('click',()=>{spPicking=false;$('spPickBar').h
 /* הגדרות מקומות במסך הניהול */
 async function loadSpotAdmin(){
   try{const o=await call('spots');if(!o||o.error)return;spData=o;const s=o.settings;
-    $('saApprove').checked=s.approve;$('saAddBy').value=s.addBy;$('saComments').checked=s.comments;
+    $('saApprove').checked=s.approve;$('saQuick').checked=s.quick!==false;clsQuick=s.quick!==false;$('saAddBy').value=s.addBy;$('saComments').checked=s.comments;
     const pend=o.spots.filter(x=>x.status==='pending').length;$('saMsg').textContent=pend?pend+' מקומות ממתינים לאישור (בלשונית מקומות).':'';
   }catch(e){}
 }
 async function saveSpotAdmin(){
-  const o=await spAct('spotSettings',{approve:$('saApprove').checked,addBy:$('saAddBy').value,comments:$('saComments').checked});
-  if(o){$('saMsg').textContent='נשמר.';if(spData)spData.settings=o.settings}
+  const o=await spAct('spotSettings',{quick:$('saQuick').checked,approve:$('saApprove').checked,addBy:$('saAddBy').value,comments:$('saComments').checked});
+  if(o){$('saMsg').textContent='נשמר.';if(spData)spData.settings=o.settings;clsQuick=o.settings.quick!==false}
 }
-['saApprove','saAddBy','saComments'].forEach(id=>$(id).addEventListener('change',saveSpotAdmin));
+['saQuick','saApprove','saAddBy','saComments'].forEach(id=>$(id).addEventListener('change',saveSpotAdmin));
 
 /* ---- טיסה עכשיו (בד״ח מהיר) / תכנון טיסה / בד״ח מלא ---- */
 const coarseMQ=matchMedia('(hover:none) and (pointer:coarse)');
@@ -2049,7 +2107,7 @@ function openNew(dateIso){
     const h=el('div','row');const ti=el('h3',null,'טיסה חדשה');ti.id='spSheetTitle';const x=el('button','ghost','סגירה');x.type='button';x.addEventListener('click',closeSheet);h.append(ti,x);b.append(h);
     const c=el('div','chooser');
     const mk=(id,cls,title,sub,fn)=>{const bt=el('button',cls);bt.type='button';bt.id=id;bt.append(el('b',null,title),el('small',null,sub));bt.addEventListener('click',()=>{closeSheet();fn()});c.append(bt)};
-    mk('chNow','','טיסה עכשיו','דגם, מזג אוויר ובד״ח מהיר של 6 בדיקות',()=>openForm(null,null,'now'));
+    if(quickAllowed())mk('chNow','','טיסה עכשיו','דגם, מזג אוויר ובד״ח מהיר של 6 בדיקות, בדיקה אחת בכל מסך',()=>openForm(null,null,'now'));
     mk('chPlan','ghost','תכנון טיסה','תאריך, שעה, מקום ודגם. בלי בד״ח, עם תזכורת ביומן',()=>openForm(dateIso||null,null,'plan'));
     mk('chFull','ghost','בד״ח מלא','כל '+CHECK_TOTAL+' הבדיקות',()=>openForm(dateIso||null,null,'full'));
     b.append(c);
@@ -2095,6 +2153,154 @@ function locateMe(loud){
   try{navigator.geolocation.getCurrentPosition(p=>{spGps={lat:p.coords.latitude,lng:p.coords.longitude};$('spMapMsg').textContent='';renderSpots();if(spMap)spMap.setView([spGps.lat,spGps.lng],14)},
     e=>{if(loud)$('spMapMsg').textContent=e&&e.code===1?'לא אישרתם גישה למיקום. אפשר להפעיל בהגדרות הדפדפן.':'לא הצלחנו לאתר מיקום.'},{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}catch(e){}
 }
+/* ---- "טיסה עכשיו": מסך נפרד, בדיקה אחת בכל פעם. השדות האמיתיים של הטופס עוברים לכאן, והשמירה עוברת דרך אותו טופס ---- */
+let clsQuick=true,qSteps=[],qIdx=-1,qMoved=null;
+function quickAllowed(){return canEdit||clsQuick!==false}
+const QTITLE={battery:'סוללה',props:'פרופלורים',gps:'קליטת GPS',calibration:'כיול',people:'מרחק מאנשים',weather:'מזג אוויר'};
+function openQuick(){
+  if(!qMoved){
+    const md=$('model').parentElement,pd=$('place').parentElement.parentElement;
+    qMoved=[md,pd].map(e=>{const c=document.createComment('q');e.before(c);return [e,c]});
+    $('qFields').append(md,pd);
+  }
+  $('formView').hidden=true;$('quickView').hidden=false;
+  $('qConfirm').checked=false;$('qReason').value='';$('qErr').textContent='';$('qErr0').textContent='';
+  qShow(-1);
+}
+function closeQuick(){
+  if(qMoved){qMoved.forEach(([e,c])=>c.after(e));qMoved.forEach(([,c])=>c.remove());qMoved=null}
+  $('quickView').hidden=true;
+}
+function qVal(id){const r=document.querySelector('input[name="c_'+id+'"]:checked');return r?r.value:''}
+function qShow(i){
+  qIdx=i;
+  $('qStep0').hidden=i!==-1;$('qCheck').hidden=!(i>=0&&i<qSteps.length);$('qSum').hidden=i!==qSteps.length||i<0;
+  $('qBack').hidden=i===-1;
+  const tot=qSteps.length+1;$('qBar').style.width=(i<0?0:Math.round((i+1)/tot*100))+'%';
+  if(i>=0&&i<qSteps.length){
+    const id=qSteps[i];$('qNum').textContent='בדיקה '+(i+1)+' מתוך '+qSteps.length;
+    $('qTitle').textContent=QTITLE[id]||id;$('qLabel').textContent=LABELS[id]||'';
+    const v=qVal(id);$('qOk').setAttribute('aria-pressed',String(v==='תקין'));$('qBad').setAttribute('aria-pressed',String(v==='לא תקין'));
+    $('qOk').focus();
+  }
+  if(i===qSteps.length&&i>=0)qSummary();
+  window.scrollTo(0,0);
+}
+$('qStart').addEventListener('click',()=>{
+  const m=currentModel().trim(),p=$('place').value.trim();
+  if(!m||m.length<2||!p){$('qErr0').textContent=!m||m.length<2?'בחרו דגם.':'בחרו מקום.';return}
+  $('qErr0').textContent='';applyModelRules();
+  qSteps=QUICK.filter(id=>{const r=document.querySelector('input[name="c_'+id+'"]');return r&&!r.disabled});
+  qShow(0);
+});
+function qAnswer(v){const id=qSteps[qIdx];const r=document.querySelector('input[name="c_'+id+'"][value="'+v+'"]');if(r){r.checked=true;updateProg()}qShow(qIdx+1)}
+$('qOk').addEventListener('click',()=>qAnswer('תקין'));
+$('qBad').addEventListener('click',()=>qAnswer('לא תקין'));
+$('qBack').addEventListener('click',()=>qShow(qIdx-1));
+$('qClose').addEventListener('click',()=>closeForm());
+function qSummary(){
+  const ul=$('qList');ul.replaceChildren();let bad=false;
+  QUICK.forEach(id=>{const v=qVal(id);const li=el('li');const b=el('button');b.type='button';
+    b.append(el('span',null,QTITLE[id]||id),el('span','v '+(v==='תקין'?'ok':v==='לא תקין'?'bad':'na'),v==='תקין'?'✓ תקין':v==='לא תקין'?'✗ לא תקין':v||'—'));
+    const si=qSteps.indexOf(id);if(si>=0)b.addEventListener('click',()=>qShow(si));else b.disabled=true;
+    if(v==='לא תקין')bad=true;li.append(b);ul.append(li)});
+  const w=$('qWx');w.replaceChildren();const p=wxParse(wxText);
+  if(p.rec)w.append(wxDetails(p.rec));else w.append(el('div','meta',wxText?p.text:'מזג האוויר עוד לא נבדק. אפשר לחזור ולבדוק.'));
+  $('qRedBox').hidden=!(p.rec&&p.rec.l==='bad');
+  $('qGo').disabled=bad;$('qGo').textContent=bad?'יש בדיקה לא תקינה, אין לאשר':'מאושר להמראה';
+}
+function qSubmit(dec){
+  $('qErr').textContent='';
+  if(!$('qConfirm').checked){$('qErr').textContent='סמנו שביצעתם את הבדיקות.';return}
+  $('decision').value=dec;$('confirm').checked=true;$('redReason').value=$('qReason').value;
+  const n=new Date();if(!editingId||$('date').value===iso(n)){$('date').value=iso(n);$('time').value=pad(n.getHours())+':'+pad(n.getMinutes())}
+  $('form').requestSubmit();
+}
+$('qGo').addEventListener('click',()=>qSubmit('approved'));
+$('qNoGo').addEventListener('click',()=>qSubmit('rejected'));
+new MutationObserver(()=>{if(!$('quickView').hidden)$('qErr').textContent=$('formErr').textContent}).observe($('formErr'),{childList:true,characterData:true,subtree:true});
+
+/* ---- חיפוש מקומות: OpenStreetMap (חינמי, בלי מפתח) ---- */
+async function searchPlaces(q){
+  try{const r=await fetchJson('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&countrycodes=il&accept-language=he&q='+encodeURIComponent(q),9000);
+    return (r||[]).map(x=>({name:x.name||String(x.display_name||'').split(',')[0],sub:x.display_name||'',lat:+x.lat,lng:+x.lon})).filter(x=>isFinite(x.lat)&&isFinite(x.lng))}
+  catch(e){try{const g=await fetchJson('https://geocoding-api.open-meteo.com/v1/search?count=8&language=he&name='+encodeURIComponent(q));
+    return (g.results||[]).map(x=>({name:x.name,sub:[x.admin1,x.country].filter(Boolean).join(', '),lat:x.latitude,lng:x.longitude}))}catch(e2){return null}}
+}
+function setPlace(p){$('place').value=p.name+' ('+(+p.lat).toFixed(5)+', '+(+p.lng).toFixed(5)+')';$('geoMsg').textContent='';wxP=fetchFormWx(true)}
+let ppMap=null;
+function openPlacePicker(){
+  const draft={tab:spData&&spData.spots.length?'class':'search'};
+  if(!spData)loadSpots().then(()=>{if(!$('spSheet').hidden&&draft.tab==='class')draw()});
+  const pick=p=>{if(ppMap){ppMap.remove();ppMap=null}closeSheet();setPlace(p)};
+  function draw(){
+    if(ppMap){ppMap.remove();ppMap=null}
+    sheet(b=>{
+      const h=el('div','row');const t=el('h3',null,'בחירת מקום');t.id='spSheetTitle';const x=el('button','ghost','סגירה');x.type='button';x.addEventListener('click',()=>{if(ppMap){ppMap.remove();ppMap=null}closeSheet()});h.append(t,x);b.append(h);
+      const tabs=el('div','pptabs');[['class','מקומות הכיתה'],['search','חיפוש'],['map','סימון במפה']].forEach(([k,l])=>{const bt=el('button','ghost',l);bt.type='button';bt.id='pp_'+k;bt.setAttribute('aria-pressed',String(draft.tab===k));bt.addEventListener('click',()=>{draft.tab=k;draw()});tabs.append(bt)});b.append(tabs);
+      if(draft.tab==='class'){
+        const inp=document.createElement('input');inp.id='ppFilter';inp.type='search';inp.placeholder='סינון לפי שם';inp.setAttribute('aria-label','סינון מקומות הכיתה');b.append(inp);
+        const list=el('div','spresults');b.append(list);
+        const fill=()=>{list.replaceChildren();const q=inp.value.trim().toLowerCase();
+          const a=(spData?spData.spots:[]).filter(s=>s.status==='ok'&&(!q||s.name.toLowerCase().includes(q)));
+          if(!spData)list.append(el('p','meta','טוען…'));else if(!a.length)list.append(el('p','meta',spData.spots.length?'אין מקום בשם הזה.':'לכיתה עוד אין מקומות. נסו חיפוש או סימון במפה.'));
+          a.forEach(s=>{const r=el('button','spres');r.type='button';const tt=el('span','t');tt.append(el('b',null,s.name),el('span',null,[fmtKm(spDist(s)),s.flights+' טיסות'].filter(Boolean).join(' · ')));r.append(tt);r.addEventListener('click',()=>pick(s));list.append(r)})};
+        inp.addEventListener('input',fill);fill();
+      }else if(draft.tab==='search'){
+        const f=el('form','spsearch');const inp=document.createElement('input');inp.id='ppQ';inp.type='search';inp.placeholder='ישוב, רחוב או מקום מוכר';inp.setAttribute('aria-label','חיפוש מקום');inp.value=draft.q||'';
+        const go=el('button',null,'חיפוש');go.type='submit';f.append(inp,go);b.append(f);
+        const list=el('div','spresults');b.append(list);
+        const show=res=>{list.replaceChildren();if(res===null){list.append(el('p','meta','החיפוש לא זמין עכשיו. נסו סימון במפה.'));return}
+          if(!res.length){list.append(el('p','meta','לא נמצא. נסו שם אחר או סימון במפה.'));return}
+          res.forEach(p=>{const r=el('button','spres');r.type='button';const tt=el('span','t');tt.append(el('b',null,p.name),el('span',null,p.sub));r.append(tt);r.addEventListener('click',()=>pick(p));list.append(r)})};
+        if(draft.res)show(draft.res);
+        f.addEventListener('submit',async e=>{e.preventDefault();const q=inp.value.trim();if(q.length<2)return;draft.q=q;list.replaceChildren(el('p','meta','מחפש…'));draft.res=await searchPlaces(q);show(draft.res)});
+        b.append(el('p','meta','החיפוש מ-OpenStreetMap.'));
+      }else{
+        const m=el('div');m.id='ppMap';b.append(m);
+        const msg=el('div','meta','הקישו על המפה כדי לסמן את המקום.');b.append(msg);
+        const nm=document.createElement('input');nm.id='ppName';nm.maxLength=40;nm.placeholder='שם למקום (לא חובה)';nm.setAttribute('aria-label','שם למקום');b.append(nm);
+        const ok=el('button',null,'בחירת הנקודה');ok.type='button';ok.id='ppOk';ok.disabled=true;b.append(ok);
+        let pt=null,mk=null;
+        ensureLeaflet().then(L=>{
+          const r=spGps||spRef()||{lat:31.77,lng:35.21};
+          ppMap=L.map(m).setView([r.lat,r.lng],spRef()?13:8);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(ppMap);
+          (spData?spData.spots:[]).filter(s=>s.status==='ok').forEach(s=>L.marker([s.lat,s.lng],{icon:L.divIcon({className:'spdiv',html:'<div class="spdot"></div>',iconSize:[14,14]}),title:s.name}).addTo(ppMap));
+          ppMap.on('click',e=>{pt=e.latlng;if(mk)mk.setLatLng(pt);else mk=L.marker(pt,{icon:L.divIcon({className:'spdiv',html:'<div class="spdot sel"></div>',iconSize:[24,24]})}).addTo(ppMap);ok.disabled=false;msg.textContent='נבחר: '+pt.lat.toFixed(5)+', '+pt.lng.toFixed(5)});
+          setTimeout(()=>ppMap&&ppMap.invalidateSize(),60);
+        }).catch(()=>{msg.textContent='המפה לא נטענה. נסו חיפוש.'});
+        ok.addEventListener('click',()=>{if(pt)pick({name:nm.value.trim()||'נקודה במפה',lat:pt.lat,lng:pt.lng})});
+      }
+    });
+  }
+  draw();
+}
+$('pickPlace').addEventListener('click',openPlacePicker);
+
+/* ---- חיפוש במפת המקומות ---- */
+let spTmp=null;
+$('spSearch').addEventListener('input',()=>{if(!$('spSearch').value.trim()){$('spResults').hidden=true;$('spResults').replaceChildren()}});
+$('spSearchForm').addEventListener('submit',async e=>{
+  e.preventDefault();const q=$('spSearch').value.trim();const box=$('spResults');
+  if(q.length<2){box.hidden=true;return}
+  box.hidden=false;box.replaceChildren(el('p','meta','מחפש…'));
+  const mine=(spData?spData.spots:[]).filter(s=>s.name.toLowerCase().includes(q.toLowerCase()));
+  const res=await searchPlaces(q);
+  box.replaceChildren();
+  const close=el('button','ghost','סגירת התוצאות');close.type='button';close.addEventListener('click',()=>{box.hidden=true;box.replaceChildren()});
+  mine.forEach(s=>{const r=el('div','spres');const tt=el('span','t');tt.append(el('b',null,s.name),el('span',null,'מקום של הכיתה · '+fmtKm(spDist(s))));
+    const o=el('button',null,'פתיחה');o.type='button';o.addEventListener('click',()=>{box.hidden=true;if(spMap)spMap.setView([s.lat,s.lng],15);openSpot(s.id)});r.append(tt,o);box.append(r)});
+  (res||[]).forEach(p=>{const r=el('div','spres');const tt=el('span','t');tt.append(el('b',null,p.name),el('span',null,p.sub));
+    const o=el('button','ghost','במפה');o.type='button';o.addEventListener('click',async()=>{box.hidden=true;if(spMode!=='map')setSpMode('map');const L=await ensureLeaflet().catch(()=>null);if(!L||!spMap)return;
+      spMap.setView([p.lat,p.lng],15);if(spTmp)spTmp.remove();spTmp=L.marker([p.lat,p.lng],{icon:L.divIcon({className:'spdiv',html:'<div class="spdot sel"></div>',iconSize:[24,24]}),title:p.name}).addTo(spMap)});
+    r.append(tt,o);
+    if(spData&&spData.canAdd){const a=el('button','ghost','הוספה כמקום');a.type='button';a.addEventListener('click',()=>{box.hidden=true;spDraft={name:p.name.slice(0,40),tags:[],note:'',warn:''};openAddSpot({lat:p.lat,lng:p.lng})});r.append(a)}
+    box.append(r)});
+  if(!mine.length&&(!res||!res.length))box.append(el('p','meta',res===null?'החיפוש לא זמין עכשיו.':'לא נמצא.'));
+  box.append(close);
+});
+
 /* ---- session ---- */
 function enterApp(o){
   token=o.token||token;uid=o.name;canEdit=!!o.admin;ver=null;lastPending=0;clsName=o.className||clsName;
@@ -2106,6 +2312,7 @@ function enterApp(o){
   applyMe({admin:canEdit,pending:0});render();renderQ();refresh();startPolling();
 }
 function logout(msg){
+  closeQuick();
   myCls=[];myDel=[];$('clsBtn').hidden=true;$('clsMenu').hidden=true;hideSpots();spData=null;
   token=null;uid=null;canEdit=false;ver=null;adminOpen=false;
   profOpen=false;profName=null;$('profView').hidden=true;$('qBanner').hidden=true;store('bdach_cache',null);
