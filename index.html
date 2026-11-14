@@ -281,7 +281,8 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
 #formView[data-mode="now"] #sections .check[data-q="0"],#formView[data-mode="now"] #sections .sec[data-q="0"],#formView[data-mode="now"] #bdach>summary{display:none}
 #formView[data-mode="now"] #sections .sec>summary{display:none}
 #formView[data-mode="now"] #sections .check{border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:12px}
-.proffoot{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;display:flex;justify-content:flex-start}
+.proffoot{margin:10px 0 14px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.proffoot .meta{min-width:0;flex:1}
 .chooser{display:flex;flex-direction:column;gap:10px}
 .chooser button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:start;min-height:64px;padding:12px 16px;border-radius:14px}
 .chooser button small{font-weight:400;opacity:.85}
@@ -590,8 +591,8 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
   </section>
   <section id="profView" class="panel" hidden>
     <div class="row"><h3 style="margin:0" id="profTitle"></h3><button type="button" class="ghost" id="profBack">חזרה ליומן</button></div>
+    <div class="proffoot"><span class="meta" id="acctLine"></span><button type="button" class="danger" id="logout2">יציאה מהחשבון</button></div>
     <div id="profBody"></div>
-    <div class="proffoot"><button type="button" class="danger" id="logout2">יציאה מהחשבון</button></div>
   </section>
   <div id="printArea"></div>
   <button id="fab" class="fab" type="button" hidden aria-label="טיסה חדשה"><span class="fabp">+</span><span class="fabt"> טיסה חדשה</span></button>
@@ -1725,7 +1726,7 @@ const PROF_HEAD=['שם','מאושרות','לא מאושרות','בוטלו (לא
 function classRows(){return pilotNames().map(n=>{const s=statsOf(flightsOf(n));return[n,s.ok,s.bad,s.can,s.ok+s.bad,fmtDate(s.last)]})}
 function numCell(v){const td=el('td','num',String(v));return td}
 function openProfile(name){
-  if(!token||!uid)return;hideSpots();
+  if(!token||!uid)return;hideSpots();$('acctLine').textContent='מחובר/ת: '+uid+' · '+(clsName||'');
   profName=canEdit?(name||null):uid;profOpen=true;
   adminOpen=false;$('adminView').hidden=true;$('resetForm').hidden=true;$('resetBtn').hidden=false;
   $('calView').style.display='none';$('formView').hidden=true;$('addBtn').hidden=true;$('fab').hidden=true;
