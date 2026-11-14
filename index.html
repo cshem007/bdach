@@ -254,6 +254,72 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 .codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
 .codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
 #printArea{display:none}
+/* ---- מחשב: מסך מנהל ---- */
+#dtabs,.dk,.kpis,.dkonly{display:none}
+#calGrid{display:contents}
+body.desk .wrap{max-width:1400px;padding-inline:max(24px,env(safe-area-inset-left,0px))}
+body.desk header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 18px}
+body.desk #addBtn{grid-column:3;grid-row:2;align-self:center}
+body.desk #dtabs{display:flex;grid-column:1/3;grid-row:2;gap:2px;border-top:1px solid rgba(255,255,255,.15);padding-top:6px;margin-top:2px;flex-wrap:wrap}
+body.desk #dtabs[hidden]{display:none}
+body.desk #dtabs .tb{display:inline-flex;align-items:center;gap:6px;background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;color:#b9cce0;font-weight:600;min-height:44px;padding:0 14px}
+body.desk #dtabs .tb[hidden]{display:none}
+body.desk #dtabs .tb[aria-current="page"]{color:#fff;border-bottom-color:#4fb3ff}
+body.desk #dtabs .tb .pbadge{position:static}
+body.desk .who #homeBtn{display:none}
+body.desk #dtabs #homeBtn{display:inline-flex}
+body.desk .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+body.desk .kpis[hidden]{display:none}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:2px;text-align:start;color:var(--ink);font-weight:400;min-width:0}
+.kpi small{color:var(--muted);font-size:.82rem}.kpi b{font:800 1.8rem/1.1 var(--f-display);font-variant-numeric:tabular-nums}.kpi span{font-size:.78rem;color:var(--muted)}
+.kpi.bad{box-shadow:inset 0 -3px 0 var(--bad)}.kpi.bad b{color:var(--bad)}.kpi.warn{box-shadow:inset 0 -3px 0 #e8743b}.kpi.plan b{color:#4b3bb5}
+button.kpi{cursor:pointer}button.kpi:hover{border-color:var(--accent)}
+body.desk #calGrid{display:grid;grid-template-columns:minmax(0,1fr) 430px;gap:16px;align-items:start}
+body.desk #calPanel[hidden]{display:block!important}
+body.desk #calToggle,body.desk #nextCard{display:none!important}
+body.desk #detail{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;margin:0}
+body.desk #detail .flight{padding:10px 8px}
+body.desk .fmore[hidden]{display:none}
+.fhead{display:flex;align-items:center;gap:10px}.fhead .t{flex:1;min-width:0}
+.fdots{width:34px;height:34px;min-height:34px;padding:0;border-radius:8px;flex:none}
+.fdots[aria-expanded="true"]{border-color:var(--accent);background:var(--today)}
+.ffail{font-size:.8rem;color:var(--bad)}
+body.desk .dkmoved{display:none}
+body.desk #spBack,body.desk #adminBack,body.desk #profBack[data-home="1"]{display:none}
+body.desk.isadmin #dtabs #profBtn{display:none}
+body.desk .dkonly{display:block}
+body.desk #spotsView:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);column-gap:18px;grid-template-areas:"h h" "m m" "s s" "r r" "p p" "c map" "l map" "x x" "z z";align-items:start}
+body.desk #spotsView>.sphead{grid-area:h}body.desk #spotsView>.spmode{grid-area:m}body.desk #spotsView>#spSearchForm{grid-area:s}body.desk #spotsView>#spResults{grid-area:r}
+body.desk #spotsView>#spPickBar{grid-area:p}body.desk #spotsView>#spMapBox{grid-area:map;position:sticky;top:12px}body.desk #spotsView>#spChips{grid-area:c}body.desk #spotsView>#spList{grid-area:l}
+body.desk #spotsView>.sprules{grid-area:x}body.desk #spotsView>.splegal{grid-area:z}
+body.desk #spMap{height:calc(100vh - 140px);min-height:420px}
+.tvbar,.svbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.tvbar input{width:260px}.tvbar select{width:auto}
+.tvbar #tvCsv{margin-inline-start:auto}
+.tvchips{display:flex;gap:6px;flex-wrap:wrap}
+.tvchips button{min-height:36px;border-radius:999px;padding:0 12px;font-weight:500}
+.tvchips button[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.tvwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.tvtab{width:100%;border-collapse:collapse;font-size:.92rem}
+.tvtab th{background:var(--bg);color:var(--muted);font-weight:700;text-align:start;padding:10px 12px;white-space:nowrap;font-size:.82rem}
+.tvtab td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+.tvtab td.num{font-variant-numeric:tabular-nums}
+.tvtab tr.sel td{background:var(--today)}
+.tvtab tr.clk{cursor:pointer}.tvtab tr.clk:hover td{background:var(--bg)}
+.tvtab .wd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:6px;vertical-align:middle;background:var(--line)}
+.tvtab .wd.ok{background:#2e9e6b}.tvtab .wd.warn{background:#d6962a}.tvtab .wd.bad{background:#d9534f}
+.tvtab .act{display:flex;gap:6px;justify-content:flex-end}
+.tvtab .act button{min-height:32px;padding:0 10px;font-size:.82rem}
+.tvfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.svreq{background:#fff7ef;border:1px solid #f3c9a6;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.svreq .rq{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.svgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;align-items:start}
+.svside{border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;position:sticky;top:12px}
+.svside .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.svside .tiles div{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}
+.svside .tiles small{font-size:.75rem;color:var(--muted)}.svside .tiles b{font:800 1.2rem var(--f-display)}
+.svside .acts{display:flex;gap:8px;flex-wrap:wrap}
+.svside .acts button{min-height:38px;font-size:.88rem}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .quick .qtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .qprog{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}.qprog i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
@@ -408,7 +474,8 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
       <h1>יומן בד״ח רחפנים</h1>
       <span class="sync" id="sync" role="status"><i></i><span>מתחבר…</span></span>
     </div>
-    <div class="who" id="who" hidden><span id="whoName"></span><button id="clsBtn" type="button" class="ghost" hidden>החלפת כיתה ▾</button><button id="homeBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg><span class="bl">בית</span></button><button id="spotsBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="bl">מקומות</span></button><button id="profBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><span class="bl">הפרופיל שלי</span></button><button id="adminBtn" type="button" class="ghost tb" hidden><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span class="bl">ניהול</span><span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <div class="who" id="who" hidden><span id="whoName"></span><button id="clsBtn" type="button" class="ghost" hidden>החלפת כיתה ▾</button><button id="homeBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7M5 10v10h14V10"/></svg><span class="bl">בית</span></button><button id="tableBtn" type="button" class="ghost tb dk">טבלת טיסות</button><button id="studBtn" type="button" class="ghost tb dk" hidden>תלמידים<span class="pbadge" id="pendBadge2" hidden></span></button><button id="spotsBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><span class="bl">מקומות</span></button><button id="profBtn" type="button" class="ghost tb"><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><span class="bl">הפרופיל שלי</span></button><button id="adminBtn" type="button" class="ghost tb" hidden><svg class="navico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span class="bl">ניהול</span><span class="pbadge" id="pendBadge" hidden></span></button><button id="logout" type="button" class="ghost">יציאה</button></div>
+    <nav id="dtabs" class="dtabs" aria-label="לשוניות" hidden></nav>
     <button id="addBtn" type="button" hidden>+ טיסה חדשה</button>
   </header>
   <div id="clsMenu" class="clsmenu" role="menu" hidden></div>
@@ -481,6 +548,8 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
     </div>
     <div class="panel nextcard" id="nextCard" hidden></div>
     <button type="button" class="ghost calbtn" id="calToggle" aria-expanded="false" aria-controls="calPanel">📅 יומן וסינון</button>
+    <div id="kpis" class="kpis" hidden></div>
+    <div id="calGrid">
     <div class="panel" id="calPanel" hidden>
       <button type="button" class="ghost fbtn" id="fBtn" aria-expanded="false">סינון</button>
       <div class="filters">
@@ -514,8 +583,32 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
       </div>
     </div>
     <div class="panel" id="detail"></div>
+    </div>
   </section>
 
+  <section id="tableView" class="panel" hidden aria-labelledby="tvH">
+    <h3 id="tvH" class="sr">טבלת טיסות</h3>
+    <div class="tvbar">
+      <input id="tvQ" type="search" placeholder="חיפוש: שם, מקום או דגם" aria-label="חיפוש בטבלה">
+      <select id="tvPilot" aria-label="טייס"></select>
+      <select id="tvRange" aria-label="טווח תאריכים"><option value="7">7 הימים האחרונים</option><option value="30" selected>30 הימים האחרונים</option><option value="90">3 חודשים</option><option value="all">הכל</option><option value="future">מהיום והלאה</option></select>
+      <div class="tvchips" id="tvChips" role="group" aria-label="סטטוס"></div>
+      <button type="button" class="ghost" id="tvCsv">ייצוא ל-Excel (CSV)</button>
+    </div>
+    <div class="tvwrap"><table class="tvtab" id="tvTab"></table></div>
+    <div class="tvfoot"><span class="meta" id="tvCount"></span><div class="row" style="gap:6px"><button type="button" class="ghost" id="tvPrev">הקודם</button><button type="button" class="ghost" id="tvNext">הבא</button></div></div>
+  </section>
+  <section id="studView" class="panel" hidden aria-labelledby="svH">
+    <div id="svReq" class="svreq" hidden></div>
+    <div class="svgrid">
+      <div class="svmain">
+        <div class="svbar"><h3 id="svH" style="margin:0">תלמידים</h3><input id="svQ" type="search" placeholder="חיפוש תלמיד" aria-label="חיפוש תלמיד"><div class="tvchips" id="svChips" role="group" aria-label="סינון"></div></div>
+        <div class="tvwrap"><table class="tvtab" id="svTab"></table></div>
+      </div>
+      <aside id="svSide" class="svside"></aside>
+    </div>
+    <div class="meta" id="svMsg" role="status"></div>
+  </section>
   <section id="spotsView" class="panel" hidden>
     <div class="row sphead"><h3 style="margin:0">מקומות של הכיתה</h3>
       <div class="row" style="gap:8px"><button type="button" id="spAdd">+ מקום חדש</button><button type="button" class="ghost" id="spBack">חזרה ליומן</button></div></div>
@@ -553,10 +646,11 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
       <label class="confirm"><input type="checkbox" id="saComments"> אפשר לכתוב תגובות על מקומות</label>
       <div class="meta" id="saMsg" role="status"></div>
     </div>
-    <h4 class="sec-title">בקשות הצטרפות</h4>
-    <div id="reqList"></div>
-    <h4 class="sec-title">משתמשים</h4>
-    <div id="userList"></div>
+    <h4 class="sec-title dkmoved">בקשות הצטרפות</h4>
+    <div id="reqList" class="dkmoved"></div>
+    <h4 class="sec-title dkmoved">משתמשים</h4>
+    <div id="userList" class="dkmoved"></div>
+    <p class="meta dkonly">בקשות הצטרפות וניהול המשתמשים נמצאים בלשונית "תלמידים".</p>
     <div id="adminMsg" class="meta" role="status" style="margin-top:10px"></div>
     <h4 class="sec-title">קודים ראשוניים</h4>
     <p class="meta">כל תלמיד מקבל קוד חד-פעמי (תקף 7 ימים) שבעזרתו הוא פותח את החשבון שלו. בלי הקוד אי אפשר לתפוס שם של מישהו אחר.</p>
@@ -834,6 +928,7 @@ function render(){
   }
   renderDetail(byDate[sel]||[]);
   renderNext();
+  if(typeof renderKpis==='function'&&document.body){try{renderKpis();if(!$('tableView').hidden)renderTable();if(!$('studView').hidden)renderStud()}catch(e){}}
 }
 
 function renderDetail(list){
@@ -890,6 +985,14 @@ function renderDetail(list){
       r.append(ed,cal);box.append(r);
     }else if(!f.pending&&!f.voided&&(canEdit||(uid&&(f.by===uid||f.pilot===uid)&&Date.now()-(f.createdAt||0)<=editMin*60000))){
       const eb=el('button','ghost','עריכה');eb.type='button';eb.addEventListener('click',()=>openForm(null,f));box.append(eb)}
+    if(isDesk()){
+      const kids=[...box.children];const more=el('div','fmore');more.hidden=true;kids.slice(2).forEach(k=>more.append(k));
+      const head=el('div','fhead');const tt=el('div','t');tt.append(kids[0],kids[1]);
+      if(fails.length)tt.append(el('div','ffail','לא תקין: '+fails.length+(fails.length===1?' בדיקה':' בדיקות')));
+      const dots=el('button','ghost fdots','⋯');dots.type='button';dots.setAttribute('aria-expanded','false');dots.setAttribute('aria-label','פרטים ופעולות');
+      dots.addEventListener('click',()=>{more.hidden=!more.hidden;dots.setAttribute('aria-expanded',String(!more.hidden))});
+      head.append(tt);if(more.children.length)head.append(dots);box.replaceChildren(head,more);
+    }
     p.append(box)});
   const al=addLabel(sel);
   if(al){const add=el('button','ghost',al);add.type='button';add.style.marginTop='8px';add.addEventListener('click',()=>openNew(sel));p.append(add)}
@@ -1117,7 +1220,7 @@ function applyMe(o){
   $('whoName').textContent=uid+(clsName?' · '+clsName:'')+(canEdit?' · מנהל':'');
   $('adminBtn').hidden=!canEdit;$('profBtn').querySelector('.bl').textContent=canEdit?'פרופילים':'הפרופיל שלי';
   const p=canEdit?(o.pending||0):0;
-  $('pendBadge').hidden=!p;$('pendBadge').textContent=p;
+  $('pendBadge').hidden=!p;$('pendBadge').textContent=p;$('pendBadge2').hidden=!p;$('pendBadge2').textContent=p;
   if(adminOpen&&p!==lastPending)loadAdmin();
   lastPending=p;
 }
@@ -1183,6 +1286,7 @@ async function adminAct(action,p,okMsg){
   try{
     const o=await call(action,p);
     $('adminMsg').textContent=o.error?(ADMIN_ERR[o.error]||'הפעולה נכשלה.'):(okMsg||'בוצע.');
+    if(o.error)$('svMsg').textContent=$('adminMsg').textContent;
     return o;
   }catch(e){$('adminMsg').textContent='הפעולה נכשלה.';return {error:'FAIL'}}
 }
@@ -1818,11 +1922,12 @@ function navState(){
   const v=id=>!$(id).hidden;
   const form=v('formView')||v('quickView'),spots=v('spotsView'),adm=v('adminView'),prof=v('profView');
   document.body.classList.toggle('formopen',form);
-  $('tabbar').hidden=!token;
-  const cur=spots?'spotsBtn':adm?'adminBtn':prof?'profBtn':(!form&&token)?'homeBtn':'';
-  ['homeBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>{if(id===cur)$(id).setAttribute('aria-current','page');else $(id).removeAttribute('aria-current')});
+  $('tabbar').hidden=!token;$('dtabs').hidden=!token;$('studBtn').hidden=!canEdit;document.body.classList.toggle('isadmin',!!canEdit);
+  const tv=v('tableView'),sv=v('studView');
+  const cur=spots?'spotsBtn':tv?'tableBtn':sv?'studBtn':adm?'adminBtn':prof?(canEdit&&isDesk()&&profName?'studBtn':'profBtn'):(!form&&token)?'homeBtn':'';
+  ['homeBtn','tableBtn','studBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>{if(id===cur)$(id).setAttribute('aria-current','page');else $(id).removeAttribute('aria-current')});
 }
-{const mo=new MutationObserver(navState);['calView','spotsView','adminView','profView','formView','quickView','who'].forEach(id=>mo.observe($(id),{attributes:true,attributeFilter:['hidden','style']}))}
+{const mo=new MutationObserver(navState);['calView','spotsView','adminView','profView','formView','quickView','tableView','studView','who'].forEach(id=>mo.observe($(id),{attributes:true,attributeFilter:['hidden','style']}))}
 $('homeBtn').addEventListener('click',()=>{if(adminOpen)closeAdmin();if(profOpen)closeProfile();if(spotsOpen)closeSpots();window.scrollTo(0,0)});
 
 /* ---- כרטיס "הטיסה הבאה שלך" (בטלפון) ---- */
@@ -1870,12 +1975,12 @@ let spotsOpen=false,spData=null,spSel=null,spMode=load('bdach_spmode')||'map',sp
 const DRONESIL=/iPhone|iPad|iPod/i.test(navigator.userAgent)?'https://apps.apple.com/il/app/dronesil-%D7%A8%D7%AA-%D7%90/id6475662325':'https://play.google.com/store/apps/details?id=il.gov.rata';
 $('spDronesIl').href=DRONESIL;
 const SP_ERR={FORBIDDEN:'אין הרשאה.',BAD_NAME:'כתבו שם של לפחות 2 אותיות.',BAD_LOC:'בחרו מיקום למקום.',DUP_NAME:'כבר יש מקום בשם הזה.',TOO_MANY:'הגעתם למספר המרבי.',CLOSED:'המנהל סגר תגובות חדשות.',EMPTY:'כתבו משהו.',NOT_FOUND:'המקום כבר לא קיים.'};
-function hideSpots(){if(!spotsOpen&&$('spotsView').hidden)return;spotsOpen=false;spPicking=false;$('spPickBar').hidden=true;$('spotsView').hidden=true;closeSheet()}
+function hideSpots(){hideDesk();if(!spotsOpen&&$('spotsView').hidden)return;spotsOpen=false;spPicking=false;$('spPickBar').hidden=true;$('spotsView').hidden=true;closeSheet()}
 function openSpots(){
   if(!token)return;
   if(adminOpen){adminOpen=false;$('adminView').hidden=true;$('resetForm').hidden=true;$('resetBtn').hidden=false}
   if(profOpen){profOpen=false;profName=null;$('profView').hidden=true}
-  $('formView').hidden=true;$('calView').style.display='none';$('addBtn').hidden=true;$('fab').hidden=false;
+  hideDesk();$('formView').hidden=true;$('calView').style.display='none';$('addBtn').hidden=true;$('fab').hidden=false;
   spotsOpen=true;$('spotsView').hidden=false;window.scrollTo(0,0);
   if(!spGps&&navigator.permissions&&navigator.permissions.query)navigator.permissions.query({name:'geolocation'}).then(r=>{if(r.state==='granted')locateMe(false)}).catch(()=>{});
   if(spData)renderSpots();
@@ -2301,6 +2406,182 @@ $('spSearchForm').addEventListener('submit',async e=>{
   if(!mine.length&&(!res||!res.length))box.append(el('p','meta',res===null?'החיפוש לא זמין עכשיו.':'לא נמצא.'));
   box.append(close);
 });
+
+/* ---- מחשב: מסך מנהל. לשוניות למעלה, מספרים, טבלת טיסות, תלמידים ---- */
+var tvState={q:'',pilot:'',range:'30',status:'all',page:0},svData=null,svSel=null,svFilt='all';
+function isDesk(){return document.body.classList.contains('desk')}
+const DESK_IDS=['homeBtn','tableBtn','studBtn','spotsBtn','profBtn','adminBtn'];
+const deskHome={};['tableBtn','studBtn'].forEach(id=>{const e=$(id),c=document.createComment(id);e.before(c);deskHome[id]=c});
+function placeDesk(){
+  const desk=!canFly();document.body.classList.toggle('desk',desk);
+  if(desk){DESK_IDS.forEach(id=>$('dtabs').append($(id)));$('homeBtn').querySelector('.bl').textContent='יומן'}
+  else{['tableBtn','studBtn'].forEach(id=>deskHome[id].after($(id)));if(!phoneMQ.matches)['homeBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>navHome[id].after($(id)));$('homeBtn').querySelector('.bl').textContent='בית'}
+  navState();if(token)render();
+}
+function hideDesk(){$('tableView').hidden=true;$('studView').hidden=true}
+function openDeskView(id){
+  if(!token)return;
+  if(adminOpen){adminOpen=false;$('adminView').hidden=true}
+  if(profOpen){profOpen=false;profName=null;$('profView').hidden=true}
+  hideSpots();hideDesk();$('formView').hidden=true;$('calView').style.display='none';
+  $(id).hidden=false;window.scrollTo(0,0);
+}
+function backToCal(){hideDesk();if(token)$('calView').style.display='contents'}
+$('homeBtn').addEventListener('click',()=>{if(!$('tableView').hidden||!$('studView').hidden)backToCal()});
+$('tableBtn').addEventListener('click',()=>openTable());
+$('studBtn').addEventListener('click',()=>openStud());
+/* מספרים חשובים */
+function renderKpis(){
+  const k=$('kpis');if(!token||!isDesk()){k.hidden=true;return}
+  k.hidden=false;k.replaceChildren();
+  const day=n=>iso(new Date(Date.now()-n*86400000)),t=iso(new Date());
+  const real=flights.filter(f=>!f.voided&&f.decision!=='planned'&&f.decision!=='canceled');
+  const w=real.filter(f=>f.date>=day(6)&&f.date<=t),pw=real.filter(f=>f.date>=day(13)&&f.date<day(6));
+  const bad=w.filter(f=>f.decision==='rejected');
+  const plan=flights.filter(f=>!f.voided&&f.decision==='planned'&&f.date>=t).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const tile=(label,val,sub,cls,fn)=>{const b=el('button','kpi'+(cls?' '+cls:''));b.type='button';b.append(el('small',null,label),el('b',null,String(val)),el('span',null,sub));b.addEventListener('click',fn);k.append(b)};
+  const d=w.length-pw.length;
+  tile('טיסות ב-7 הימים האחרונים',w.length,d>0?'+'+d+' מהשבוע הקודם':d<0?d+' מהשבוע הקודם':'כמו בשבוע הקודם','',()=>openTable({range:'7',status:'all',pilot:'',q:''}));
+  tile('לא אושרו להמראה',bad.length,'ב-7 הימים האחרונים',bad.length?'bad':'',()=>openTable({range:'7',status:'rejected',pilot:'',q:''}));
+  if(canEdit)tile('בקשות הצטרפות',lastPending||0,lastPending?'לאישור בלשונית תלמידים':'אין בקשות ממתינות',lastPending?'warn':'',()=>openStud());
+  else{const mine=real.filter(f=>f.pilot===uid);tile('הטיסות שלי',mine.length,'מאז ההתחלה','',()=>openTable({pilot:uid,range:'all',status:'all',q:''}))}
+  tile('טיסות מתוכננות',plan.length,plan[0]?'הקרובה: '+fmtDate(plan[0].date)+' '+(plan[0].time||''):'אין תכנונים','plan',()=>openTable({range:'future',status:'planned',pilot:'',q:''}));
+}
+/* טבלת טיסות */
+const ST_LABEL={all:'הכל',approved:'מאושר',rejected:'לא מאושר',planned:'מתוכנן',canceled:'בוטל'};
+const stOf=f=>f.voided||f.decision==='canceled'?'canceled':f.decision;
+function tvList(){
+  const n=Date.now(),day=k=>iso(new Date(n-k*86400000)),t=iso(new Date());
+  let a=flights.filter(f=>!f.pending);
+  const r=tvState.range;
+  if(r==='future')a=a.filter(f=>f.date>=t);else if(r!=='all')a=a.filter(f=>f.date>=day(+r-1)&&f.date<=t);
+  if(tvState.pilot)a=a.filter(f=>f.pilot===tvState.pilot);
+  const q=tvState.q.trim().toLowerCase();
+  if(q)a=a.filter(f=>[f.pilot,f.place,f.model].join(' ').toLowerCase().includes(q));
+  return a;
+}
+function openTable(opt){
+  openDeskView('tableView');
+  if(opt)Object.assign(tvState,opt,{page:0});
+  renderTable();
+}
+function renderTable(){
+  const ps=$('tvPilot'),names=pilotNames();ps.replaceChildren();
+  [['','כל הטייסים']].concat(names.map(n=>[n,n])).forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;ps.append(o)});
+  ps.value=tvState.pilot;$('tvRange').value=tvState.range;if($('tvQ').value!==tvState.q)$('tvQ').value=tvState.q;
+  const base=tvList();
+  const cnt={all:base.length};['approved','rejected','planned','canceled'].forEach(k=>cnt[k]=base.filter(f=>stOf(f)===k).length);
+  const ch=$('tvChips');ch.replaceChildren();
+  Object.keys(ST_LABEL).forEach(k=>{const b=el('button','ghost',ST_LABEL[k]+' · '+cnt[k]);b.type='button';b.dataset.st=k;b.setAttribute('aria-pressed',String(tvState.status===k));b.addEventListener('click',()=>{tvState.status=k;tvState.page=0;renderTable()});ch.append(b)});
+  let a=tvState.status==='all'?base:base.filter(f=>stOf(f)===tvState.status);
+  const asc=tvState.range==='future';
+  a=a.slice().sort((x,y)=>{const c=((x.date||'')+(x.time||'')).localeCompare((y.date||'')+(y.time||''));return asc?c:-c});
+  const per=25,pages=Math.max(1,Math.ceil(a.length/per));if(tvState.page>=pages)tvState.page=pages-1;
+  const pg=a.slice(tvState.page*per,tvState.page*per+per);
+  const tb=$('tvTab');tb.replaceChildren();
+  const hd=document.createElement('tr');['תאריך','שעה','טייס','דגם','מקום','בד״ח','מזג אוויר','סטטוס',''].forEach(h=>hd.append(el('th',null,h)));tb.append(hd);
+  if(!pg.length){const tr=document.createElement('tr');const td=el('td','meta','אין טיסות שמתאימות לסינון.');td.colSpan=9;tr.append(td);tb.append(tr)}
+  pg.forEach(f=>{
+    const tr=document.createElement('tr');
+    const st=stOf(f),dec=f.voided?['הרישום בוטל','cancel']:(DECISION[f.decision]||['','']);
+    const wp=f.weather?wxParse(f.weather):null,rec=wp&&wp.rec;
+    const wtd=el('td');if(rec){wtd.append(el('i','wd '+(rec.l||'ok')),document.createTextNode(Math.round(rec.w)+' קמ״ש'))}else wtd.append(el('span','meta','—'));
+    const kind=f.decision==='planned'?'—':f.mode==='quick'?'מהיר':'מלא';
+    [fmtDate(f.date),f.time||'',f.pilot||'',f.model||'',placeName(f.place)].forEach((v,i)=>{const td=el('td',i<2?'num':null,v);if(i===2)td.style.fontWeight='700';tr.append(td)});
+    tr.append(el('td','meta',kind),wtd);
+    const s=el('td');s.append(el('span','badge '+dec[1],dec[0]));tr.append(s);
+    const act=el('td');const ad=el('div','act');
+    const go=el('button','ghost','ביומן');go.type='button';go.addEventListener('click',()=>{sel=f.date;const d=new Date(f.date+'T00:00:00');viewY=d.getFullYear();viewM=d.getMonth();backToCal();render();window.scrollTo(0,0)});ad.append(go);
+    if(f.decision==='planned'&&canEditFlight(f)){const e=el('button','ghost','עריכה');e.type='button';e.addEventListener('click',()=>{hideDesk();openForm(null,f,'plan')});ad.append(e)}
+    act.append(ad);tr.append(act);
+    tb.append(tr);
+  });
+  $('tvCount').textContent=a.length?'מוצגות '+(tvState.page*per+1)+'–'+(tvState.page*per+pg.length)+' מתוך '+a.length+' טיסות':'';
+  $('tvPrev').disabled=tvState.page<=0;$('tvNext').disabled=tvState.page>=pages-1;
+  $('tvCsv').onclick=()=>{
+    const head=['תאריך','שעה','טייס','דגם','מקום','בד״ח','רוח (קמ״ש)','סטטוס'];
+    const rows=a.map(f=>{const wp=f.weather?wxParse(f.weather):null;return [f.date,f.time||'',f.pilot||'',f.model||'',placeName(f.place),f.decision==='planned'?'':f.mode==='quick'?'מהיר':'מלא',wp&&wp.rec?Math.round(wp.rec.w):'',f.voided?'בוטל':(DECISION[f.decision]||[''])[0]]});
+    saveCsv('﻿'+[head].concat(rows).map(r=>r.map(csvCell).join(',')).join('\r\n'),'bdach-flights-'+iso(new Date())+'.csv');
+  };
+}
+$('tvQ').addEventListener('input',()=>{tvState.q=$('tvQ').value;tvState.page=0;renderTable()});
+$('tvPilot').addEventListener('change',()=>{tvState.pilot=$('tvPilot').value;tvState.page=0;renderTable()});
+$('tvRange').addEventListener('change',()=>{tvState.range=$('tvRange').value;tvState.page=0;renderTable()});
+$('tvPrev').addEventListener('click',()=>{tvState.page--;renderTable()});
+$('tvNext').addEventListener('click',()=>{tvState.page++;renderTable()});
+/* תלמידים (מנהל, במחשב) */
+async function openStud(){
+  openDeskView('studView');renderStud();
+  try{const o=await call('adminData');if(o&&!o.error){svData=o;if(!$('studView').hidden)renderStud()}}catch(e){}
+}
+function renderStud(){
+  const rq=$('svReq');rq.replaceChildren();
+  const reqs=svData?svData.requests:[];
+  rq.hidden=!reqs.length;
+  if(reqs.length){
+    const h=el('div','rq');h.append(el('b',null,reqs.length+' בקשות הצטרפות'));
+    if(reqs.length>1){const all=el('button',null,'לאשר את כולם');all.type='button';all.addEventListener('click',async()=>{all.disabled=true;for(const r of reqs)await adminAct('decide',{id:r.id,approve:true},'');svMsg('כל הבקשות אושרו.');await refresh();openStud()});h.append(all)}
+    rq.append(h);
+    reqs.forEach(r=>{const row=el('div','rq');row.append(el('b',null,r.name),el('span','meta',[r.note,new Date(r.createdAt).toLocaleString('he-IL',{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})].filter(Boolean).join(' · ')));
+      const y=el('button',null,'אישור');y.type='button';y.addEventListener('click',async()=>{await adminAct('decide',{id:r.id,approve:true},'');svMsg(r.name+' אושר/ה.');await refresh();openStud()});
+      const n=armBtn('דחייה','danger',async()=>{await adminAct('decide',{id:r.id,approve:false},'');svMsg('הבקשה של '+r.name+' נדחתה.');await refresh();openStud()});
+      row.append(y,n);rq.append(row)});
+  }
+  const users=svData?svData.users:pilotNames().map(n=>({name:n}));
+  const stats={};classRows().forEach(r=>stats[r[0]]=r);
+  const cutoff=iso(new Date(Date.now()-30*86400000));
+  const lastIso=n=>{const l=flightsOf(n).filter(f=>!f.voided&&f.decision!=='planned').map(f=>f.date).sort().pop();return l||''};
+  const F={all:['כולם',()=>true],nologin:['עוד לא נכנסו',u=>svData&&!u.hasPin],idle:['לא טסו 30 יום',u=>lastIso(u.name)<cutoff]};
+  const ch=$('svChips');ch.replaceChildren();
+  Object.keys(F).forEach(k=>{const c=users.filter(F[k][1]).length;const b=el('button','ghost',F[k][0]+' · '+c);b.type='button';b.setAttribute('aria-pressed',String(svFilt===k));b.addEventListener('click',()=>{svFilt=k;renderStud()});ch.append(b)});
+  const q=$('svQ').value.trim();
+  const list=users.filter(F[svFilt][1]).filter(u=>!q||u.name.includes(q)).sort((a,b)=>a.name.localeCompare(b.name,'he'));
+  $('svH').textContent='תלמידים · '+users.length;
+  const tb=$('svTab');tb.replaceChildren();
+  const hd=document.createElement('tr');['שם','מצב','טיסות','מאושרות','לא מאושרות','טיסה אחרונה'].forEach(h=>hd.append(el('th',null,h)));tb.append(hd);
+  list.forEach(u=>{
+    const s=stats[u.name]||[u.name,0,0,0,0,''];
+    const tr=document.createElement('tr');tr.className='clk'+(u.name===svSel?' sel':'');tr.tabIndex=0;
+    const nm=el('td');nm.append(el('b',null,u.name+(u.name===uid?' (אתם)':'')));if(u.admin)nm.append(document.createTextNode(' '),el('span','badge ok','מנהל'));tr.append(nm);
+    tr.append(el('td',null,!svData?'':u.hasPin?'נכנס':'עוד לא נכנס'));
+    [s[4],s[1],s[2]].forEach(v=>tr.append(el('td','num',String(v))));
+    tr.append(el('td','meta',s[5]||'—'));
+    const pick=()=>{svSel=u.name;renderStud()};
+    tr.addEventListener('click',pick);tr.addEventListener('keydown',e=>{if(e.key==='Enter')pick()});
+    tb.append(tr);
+  });
+  renderStudSide(users);
+}
+function svMsg(t){$('svMsg').textContent=t}
+function renderStudSide(users){
+  const sd=$('svSide');sd.replaceChildren();
+  const u=users.find(x=>x.name===svSel);
+  if(!u){sd.append(el('b',null,'בחרו תלמיד מהטבלה'),el('p','meta','כאן יופיעו הנתונים שלו והפעולות.'));return}
+  const list=flightsOf(u.name).filter(f=>!f.voided&&f.decision!=='planned');
+  const st=statsOf(list);
+  const models={},fails={};list.forEach(f=>{models[f.model]=(models[f.model]||0)+1;Object.entries(f.checks||{}).forEach(([k,v])=>{if(v==='לא תקין')fails[k]=(fails[k]||0)+1})});
+  const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1])[0];
+  sd.append(el('h3',null,u.name),el('div','meta',[u.admin?'מנהל':'',svData?(u.hasPin?'נכנס לאפליקציה':'עוד לא נכנס'):''].filter(Boolean).join(' · ')));
+  const t=el('div','tiles');[['טיסות',st.ok+st.bad],['לא מאושרות',st.bad],['דגם עיקרי',(top(models)||['—'])[0]]].forEach(([k,v])=>{const d=el('div');d.append(el('small',null,k),el('b',null,String(v)));t.append(d)});sd.append(t);
+  const tf=top(fails);sd.append(el('div','meta',tf?'הבדיקה שנכשלה הכי הרבה: '+(LABELS[tf[0]]||tf[0])+' ('+tf[1]+')':'אין בדיקות שנכשלו.'));
+  if(u.code)sd.append(el('div','meta','קוד חד-פעמי: '+fmtCode(u.code)+' · עד '+new Date(u.codeExp).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})));
+  const a=el('div','acts');
+  const prof=el('button','ghost','הפרופיל המלא');prof.type='button';prof.addEventListener('click',()=>openProfile(u.name));
+  const fl=el('button','ghost','כל הטיסות שלו');fl.type='button';fl.addEventListener('click',()=>openTable({pilot:u.name,range:'all',status:'all',q:''}));
+  a.append(prof,fl);sd.append(a);
+  if(svData&&u.name!==uid){
+    const b=el('div','acts');
+    const after=async(m)=>{if(m)svMsg(m);await refresh();openStud()};
+    b.append(armBtn(u.admin?'הסרת ניהול':'הוספה כמנהל','ghost',async()=>{const r=await adminAct('setAdmin',{name:u.name,admin:!u.admin},'');after(r&&r.ok?(u.admin?'הניהול הוסר.':u.name+' מנהל עכשיו.'):ADMIN_ERR[r&&r.error]||'הפעולה נכשלה.')}));
+    b.append(armBtn(u.hasPin?'איפוס קוד אישי':'קוד חדש','ghost',async()=>{const r=await adminAct('resetPin',{name:u.name},'');after(r&&r.code?'קוד חד-פעמי חדש ל'+u.name+': '+fmtCode(r.code):(ADMIN_ERR[r&&r.error]||'הפעולה נכשלה.'))}));
+    if(u.hasPin&&!u.admin)b.append(armBtn('העברת הניהול','ghost',async()=>{const r=await adminAct('transferAdmin',{name:u.name},'');if(r&&r.ok){canEdit=false;await refresh();backToCal();showOffline('הניהול הועבר ל'+u.name+'.')}else after(ADMIN_ERR[r&&r.error]||'הפעולה נכשלה.')}));
+    if(!u.admin)b.append(armBtn('הסרה מהכיתה','danger',async()=>{const r=await adminAct('removeUser',{name:u.name},'');svSel=null;after(r&&r.ok?u.name+' הוסר/ה מהכיתה.':'הפעולה נכשלה.')}));
+    sd.append(b);
+  }
+}
+$('svQ').addEventListener('input',()=>renderStud());
+placeDesk();
+for(const mq of [phoneMQ,coarseMQ])if(mq.addEventListener)mq.addEventListener('change',placeDesk);
 
 /* ---- session ---- */
 function enterApp(o){
