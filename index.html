@@ -254,6 +254,34 @@ details[open]>summary .cnt::after{transform:rotate(180deg)}
 .codes{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
 .codes .slip{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px}
 #printArea{display:none}
+.wxplan{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.wxbest{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.wxbest>b{font:700 1rem var(--f-display)}
+.wxbest button.bw{background:none;border:0;padding:0;min-height:0;font:inherit;text-decoration:underline dotted}.wxplan .bw.ok{color:#3ddc97}.wxplan .bw.warn{color:#f2b541}.wxplan .bw.bad{color:#ff6b5e}
+.wxcard .wxdtg{color:#4fb3ff;background:none;border:0;min-height:36px;padding:0 4px;font-weight:600;text-decoration:none}
+.wxhrbar{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;direction:ltr}
+.wxslot{min-height:22px;height:22px;padding:0;border:0;border-radius:4px;background:#1b2b3d;cursor:pointer}
+.wxslot.ok{background:#3ddc97}.wxslot.warn{background:#f2b541}.wxslot.bad{background:#ff6b5e}.wxslot.dark{background:#1b2b3d;cursor:default}
+.wxslot.past{opacity:.3;cursor:default}.wxslot.now{box-shadow:0 0 0 2px #fff}
+.wxslot:not(:disabled):hover{filter:brightness(1.15);transform:scaleY(1.15)}
+.wxbarax{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);direction:ltr;font-size:.7rem;color:#7f99b3}
+.wxchartbox{display:none}
+.wxchart{width:100%;height:auto;display:block}
+.wxleg{font-size:.75rem;color:#7f99b3}
+.wxwhy{font-size:.82rem}
+.wxdays{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.wxdays[hidden]{display:none}
+.wxday{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#14375a;border:1px solid #2b5681;border-inline-start:4px solid #2b5681;color:#fff;border-radius:10px;padding:8px;font-weight:400;min-width:0;text-align:start}
+.wxday.ok{border-inline-start-color:#3ddc97}.wxday.warn{border-inline-start-color:#f2b541}.wxday.bad{border-inline-start-color:#ff6b5e}
+.wxday small{color:#9fb6cc;font-size:.75rem}
+.wxspots{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.wxspots .wxsp{min-height:36px;padding:0 10px;font-size:.85rem}.wxspots .wxsp.on{border-color:#4fb3ff;color:#4fb3ff}
+body.desk .wxplan{display:grid;grid-template-columns:minmax(0,1fr) 250px;grid-template-areas:"h d" "b d" "a d" "c d" "w d";gap:6px 20px;align-items:start}
+body.desk .wxbest{grid-area:h}body.desk .wxhrbar{grid-area:b}body.desk .wxbarax{grid-area:a}body.desk .wxchartbox{grid-area:c;display:block}body.desk .wxwhy{grid-area:w}
+body.desk .wxdays,body.desk .wxdays[hidden]{grid-area:d;display:flex;flex-direction:column}
+body.desk .wxdtg{display:none}
+body.desk .wxbest>b{font-size:1.15rem}
+
 /* ---- מחשב: מסך מנהל ---- */
 #dtabs,.dk,.kpis,.dkonly{display:none}
 #calGrid{display:contents}
@@ -542,6 +570,7 @@ button.spres{color:var(--ink);width:100%;text-align:start;font-weight:400;min-he
           <button type="button" id="wxHere">המיקום שלי</button>
           <form id="wxCityForm" novalidate class="wxcityf"><input id="wxCity" maxlength="60" autocomplete="off" placeholder="או הקלידו עיר / ישוב" aria-label="עיר או ישוב"><button type="submit" class="ghost" id="wxCitySet">חיפוש</button></form>
         </div>
+        <div class="wxspots" id="wxSpots"></div>
         <div class="meta" id="wxMsg2" role="status"></div>
       </div>
       <div id="wxBody" aria-live="polite"></div>
@@ -1752,7 +1781,7 @@ function renderCard(){
   const mini=el('button','wxmini');mini.type='button';mini.setAttribute('aria-expanded',String(wxOpen));
   mini.append(el('i','dot '+lvl),el('b','mv',String(Math.round(main))),el('small',null,'קמ״ש'),el('span','wxsep','·'),el('b','mv',Math.round(d.t)+'°'),el('span','chev',wxOpen?'▴':'▾'));
   mini.addEventListener('click',()=>{wxOpen=!wxOpen;store('bdach_wxopen',wxOpen?'1':'0');full.hidden=!wxOpen;mini.setAttribute('aria-expanded',String(wxOpen));mini.querySelector('.chev').textContent=wxOpen?'▴':'▾'});
-  box.append(mini,full);
+  box.append(mini,planBlock(lim),full);
 }
 function renderCardState(){
   $('wxPlace').textContent=wxLoc?(cleanAddr(wxLoc.name)||wxLoc.name):'בחרו מיקום';
@@ -1764,11 +1793,11 @@ function renderCardState(){
 async function loadCard(){
   if(!token||wxBusy)return;
   renderCardState();
-  if(!wxLoc){$('wxBody').replaceChildren(el('p','meta','כדי לראות תחזית ורוח בזמן אמת, בחרו מיקום.'));return}
+  if(!wxLoc){$('wxBody').replaceChildren(el('p','meta','כדי לראות תחזית ורוח בזמן אמת, בחרו מיקום.'));wxSpotBtns();return}
   wxBusy=true;
   if(!wxData)$('wxBody').replaceChildren(el('p','meta','טוען מזג אוויר…'));
   try{
-    const u='https://api.open-meteo.com/v1/forecast?latitude='+wxLoc.lat+'&longitude='+wxLoc.lng+'&current='+WX_CUR+'&hourly='+WX_HOUR+'&daily=sunrise,sunset&forecast_days=2&timezone=auto&wind_speed_unit=kmh';
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+wxLoc.lat+'&longitude='+wxLoc.lng+'&current='+WX_CUR+'&hourly='+WX_HOUR+'&daily=sunrise,sunset&forecast_days=4&timezone=auto&wind_speed_unit=kmh';
     const [w,obs]=await Promise.all([fetchJson(u),nearestMetar(wxLoc.lat,wxLoc.lng).catch(()=>null)]);
     if(!w||!w.current)throw new Error('no data');
     wxData={w,obs,at:Date.now(),stale:false};renderCard();
@@ -1777,7 +1806,7 @@ async function loadCard(){
   }finally{wxBusy=false;renderCardState()}
 }
 function setWxLoc(lat,lng,name){wxLoc={lat:+(+lat).toFixed(4),lng:+(+lng).toFixed(4),name:name||'המיקום שלי'};store('bdach_loc',JSON.stringify(wxLoc));wxData=null;wxPanelOpen=false;$('wxMsg2').textContent='';loadCard()}
-$('wxPlaceBtn').addEventListener('click',()=>{wxPanelOpen=!wxPanelOpen;renderCardState();if(wxPanelOpen)$('wxCity').focus()});
+$('wxPlaceBtn').addEventListener('click',()=>{wxPanelOpen=!wxPanelOpen;renderCardState();if(wxPanelOpen){wxSpotBtns();$('wxCity').focus()}});
 $('wxRefresh').addEventListener('click',()=>{wxData&&(wxData.stale=false);loadCard()});
 $('wxHere').addEventListener('click',()=>{
   const m=$('wxMsg2');m.textContent='';
@@ -1803,6 +1832,109 @@ $('wxCityForm').addEventListener('submit',async e=>{
   }catch(ex){m.textContent='החיפוש נכשל. נסו שוב.'}
   finally{$('wxCitySet').disabled=false}
 });
+
+/* ---- מתי לטוס: כל שעה לפי מגבלת הדגם, החלון הכי טוב, 3 ימים ולחיצה לתכנון ---- */
+let wxDaysOpen=false;
+function hourInfo(w,i,lim){
+  const H=w.hourly,g=k=>H[k]?H[k][i]:undefined;
+  const d={t:g('temperature_2m'),wind:g('wind_speed_10m'),wind80:g('wind_speed_80m'),gust:g('wind_gusts_10m'),rain:g('precipitation'),code:g('weather_code')};
+  const t=String(H.time[i]),day=t.slice(0,10),hm=t.slice(11,16);
+  const di=w.daily&&w.daily.time?w.daily.time.indexOf(day):-1;
+  let dark=false;
+  if(di>=0&&w.daily.sunrise&&w.daily.sunset){const sr=String(w.daily.sunrise[di]).slice(11,13),ss=String(w.daily.sunset[di]).slice(11,16);dark=hm.slice(0,2)<sr||hm>=ss}
+  const main=typeof d.wind80==='number'?d.wind80:(d.wind||0);
+  return Object.assign(d,{t:t,day:day,hm:hm,dark:dark,main:main,lvl:dark?'dark':wxJudge(d,lim)[0]});
+}
+const hEnd=hm=>pad(+hm.slice(0,2)+1)+':00';
+const rng=(a,b)=>'\u2066'+a+'–'+b+'\u2069';
+function bestWindow(list){
+  for(const want of ['ok','warn']){
+    let best=null,cur=null;
+    list.forEach(h=>{if(h.lvl===want){cur=cur||{a:h.hm,n:0};cur.n++;cur.b=hEnd(h.hm);if(!best||cur.n>best.n)best=Object.assign({},cur)}else cur=null});
+    if(best)return Object.assign(best,{lvl:want});
+  }
+  return null;
+}
+const WD=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+function dayName(d,today){if(d===today)return 'היום';const t=new Date(today+'T12:00:00');t.setDate(t.getDate()+1);if(d===iso(t))return 'מחר';return 'יום '+WD[new Date(d+'T12:00:00').getDay()]}
+function planAt(day,hm){
+  if(!token||!uid)return;
+  openForm(day,null,'plan');$('time').value=hm;if(wxLoc)wxP=fetchFormWx(true);
+}
+function chartSvg(hs,lim,nowKey){
+  const Wd=720,Ht=190,P={l:34,r:10,t:12,b:24},n=hs.length;if(n<2)return '';
+  const L=windLimits(lim),lineV=lim>0?lim:L.rg;
+  const top=Math.max(30,lineV*1.15,...hs.map(h=>(h.gust||0)*1.05));
+  const X=i=>P.l+i*(Wd-P.l-P.r)/(n-1),Y=v=>P.t+(1-Math.min(v,top)/top)*(Ht-P.t-P.b);
+  const pts=k=>hs.map((h,i)=>X(i).toFixed(1)+','+Y(h[k]||0).toFixed(1)).join(' ');
+  let s='<svg class="wxchart" viewBox="0 0 '+Wd+' '+Ht+'" role="img" aria-label="רוח ומשבים לפי שעה היום, עם קו מגבלת הרוח">';
+  hs.forEach((h,i)=>{if(h.dark){const w=(Wd-P.l-P.r)/(n-1);s+='<rect x="'+(X(i)-w/2).toFixed(1)+'" y="'+P.t+'" width="'+w.toFixed(1)+'" height="'+(Ht-P.t-P.b)+'" fill="#000" opacity=".22"/>'}});
+  [0,10,20,30,40,50,60].filter(v=>v<=top).forEach(v=>{s+='<line x1="'+P.l+'" x2="'+(Wd-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#fff" stroke-opacity=".08"/><text x="'+(P.l-6)+'" y="'+(Y(v)+4).toFixed(1)+'" fill="#7f99b3" font-size="11" text-anchor="end">'+v+'</text>'});
+  if(hs.some(h=>typeof h.gust==='number'))s+='<polygon points="'+X(0).toFixed(1)+','+Y(0)+' '+pts('gust')+' '+X(n-1).toFixed(1)+','+Y(0)+'" fill="#f2b541" fill-opacity=".14"/><polyline points="'+pts('gust')+'" fill="none" stroke="#f2b541" stroke-opacity=".6" stroke-width="1.5"/>';
+  s+='<polyline points="'+pts('wind')+'" fill="none" stroke="#9fb6cc" stroke-width="2"/>';
+  if(hs.some(h=>typeof h.wind80==='number'))s+='<polyline points="'+pts('wind80')+'" fill="none" stroke="#4fb3ff" stroke-width="3" stroke-linejoin="round"/>';
+  s+='<line x1="'+P.l+'" x2="'+(Wd-P.r)+'" y1="'+Y(lineV).toFixed(1)+'" y2="'+Y(lineV).toFixed(1)+'" stroke="#ff6b5e" stroke-width="2" stroke-dasharray="6 5"/><text x="'+(Wd-P.r-4)+'" y="'+(Y(lineV)-6).toFixed(1)+'" fill="#ff6b5e" font-size="12" font-weight="700" text-anchor="end">'+(lim>0?'מגבלת הדגם '+Math.round(lim):'מגבלה כללית '+Math.round(lineV))+'</text>';
+  const ni=hs.findIndex(h=>h.t===nowKey);
+  if(ni>=0)s+='<line x1="'+X(ni).toFixed(1)+'" x2="'+X(ni).toFixed(1)+'" y1="'+P.t+'" y2="'+(Ht-P.b)+'" stroke="#fff" stroke-width="1.5"/><text x="'+X(ni).toFixed(1)+'" y="'+(P.t+10)+'" fill="#fff" font-size="11" text-anchor="middle">עכשיו</text>';
+  hs.forEach((h,i)=>{if(i%3===0)s+='<text x="'+X(i).toFixed(1)+'" y="'+(Ht-6)+'" fill="#7f99b3" font-size="11" text-anchor="middle">'+h.hm+'</text>'});
+  return s+'</svg>';
+}
+function planBlock(lim){
+  const wrap=el('div','wxplan');const w=wxData&&wxData.w,H=w&&w.hourly;
+  if(!H||!H.time||!H.time.length)return wrap;
+  const nowKey=hourKey(w.current&&w.current.time),today=nowKey.slice(0,10);
+  const all=H.time.map((_,i)=>hourInfo(w,i,lim));
+  const rest=d=>all.filter(h=>h.day===d&&(d>today||h.t>=nowKey));
+  let bw=bestWindow(rest(today)),when='היום';
+  if(!rest(today).some(h=>!h.dark)){const tm=[...new Set(all.map(h=>h.day))].find(d=>d>today);if(tm){bw=bestWindow(rest(tm));when='מחר';if(bw)bw.day=tm}}
+  const head=el('div','wxbest');
+  const ttl=el('b',null,'מתי '+when+'? ');
+  const tx=bw?rng(bw.a,bw.b)+(bw.lvl==='warn'?' (גבולי)':''):'אין חלון טוב '+when;
+  if(bw&&bw.day){const g=el('button','link bw '+bw.lvl,tx);g.type='button';g.title='לחצו לתכנון';g.addEventListener('click',()=>planAt(bw.day,bw.a));ttl.append(g)}else ttl.append(el('span','bw '+(bw?bw.lvl:'bad'),tx));
+  const tg=el('button','link wxdtg',wxDaysOpen?'פחות ‹':'3 ימים ›');tg.type='button';tg.setAttribute('aria-expanded',String(wxDaysOpen));
+  head.append(ttl,tg);wrap.append(head);
+  const hs=all.filter(h=>h.day===today&&h.hm>='05:00'&&h.hm<='21:00');
+  if(hs.length){
+    const bar=el('div','wxhrbar');bar.setAttribute('role','group');bar.setAttribute('aria-label','מצב כל שעה היום. לחיצה על שעה פותחת תכנון טיסה');
+    hs.forEach(h=>{
+      const past=h.t<nowKey,b=el('button','wxslot '+h.lvl+(past?' past':'')+(h.t===nowKey?' now':''));b.type='button';
+      const lab=h.hm+' · '+(h.dark?'חושך':'רוח '+Math.round(h.main)+', משבים '+Math.round(h.gust||h.main))+' קמ״ש';
+      b.title=lab+(past||h.dark?'':' · לחצו לתכנון');b.setAttribute('aria-label',lab);
+      if(past||h.dark)b.disabled=true;else b.addEventListener('click',()=>planAt(h.day,h.hm));
+      bar.append(b);
+    });
+    const ax=el('div','wxbarax');hs.forEach((h,i)=>ax.append(el('span',null,i%3===0?h.hm.slice(0,2):'')));
+    wrap.append(bar,ax);
+    const ch=el('div','wxchartbox');ch.innerHTML=chartSvg(hs,lim,nowKey);
+    ch.append(el('div','wxleg','— רוח ב-80 מ׳ · — בקרקע · משבים · קו אדום: מגבלה · כהה: חושך'));
+    wrap.append(ch);
+  }
+  const why=bw&&bw.lvl==='ok'?null:rest(today).find(h=>h.lvl==='bad');
+  wrap.append(el('div','meta wxwhy',(lim?'לפי מגבלת '+(cardModel||'הדגם')+' ('+Math.round(lim)+' קמ״ש).':'בחרו "הדגם שלי" בכרטיס לחישוב לפי הדגם.')+(why?' ב-'+why.hm+' '+((why.gust||0)>(why.main||0)?'המשבים':'הרוח')+' מעל הסף.':'')));
+  const days=el('div','wxdays');days.hidden=!wxDaysOpen&&!isDesk();
+  [...new Set(all.map(h=>h.day))].filter(d=>d>today).slice(0,3).forEach(d=>{
+    const list=rest(d),b=bestWindow(list),day=list.filter(h=>!h.dark);if(!day.length)return;
+    const mg=Math.round(Math.max(...day.map(h=>h.gust||h.main))),rain=day.reduce((a,h)=>a+(h.rain||0),0);
+    const mid=day[Math.floor(day.length/2)];
+    const lvl=!b?'bad':b.lvl==='ok'&&b.n>=4?'ok':'warn';
+    const c=el('button','wxday '+lvl);c.type='button';
+    c.append(el('b',null,dayName(d,today)+' '+WX_ICON(mid.code)),el('span','bw '+(b?b.lvl:'bad'),b?rng(b.a,b.b):'לא מומלץ'),el('small',null,'משבים עד '+mg+(rain>=0.5?' · גשם '+rain.toFixed(1)+' מ״מ':'')));
+    if(b){c.title='לחצו לתכנון ב-'+b.a;c.addEventListener('click',()=>planAt(d,b.a))}else c.disabled=true;
+    days.append(c);
+  });
+  wrap.append(days);
+  tg.addEventListener('click',()=>{wxDaysOpen=!wxDaysOpen;days.hidden=!wxDaysOpen;tg.textContent=wxDaysOpen?'פחות ‹':'3 ימים ›';tg.setAttribute('aria-expanded',String(wxDaysOpen))});
+  return wrap;
+}
+/* החלפת מקום התחזית למקום של הכיתה */
+async function wxSpotBtns(){
+  const box=$('wxSpots');
+  const fill=()=>{box.replaceChildren();const sp=(spData&&spData.spots||[]).filter(x=>x.status!=='pending'&&isFinite(x.lat)&&isFinite(x.lng));if(!sp.length)return;
+    box.append(el('span','meta','מקומות הכיתה:'));
+    sp.slice(0,12).forEach(x=>{const b=el('button','ghost wxsp'+(wxLoc&&Math.abs(wxLoc.lat-x.lat)<1e-3&&Math.abs(wxLoc.lng-x.lng)<1e-3?' on':''),x.name);b.type='button';b.addEventListener('click',()=>setWxLoc(x.lat,x.lng,x.name));box.append(b)})};
+  fill();
+  if(!spData&&token){try{const o=await call('spots');if(o&&!o.error){spData=o;fill()}}catch(e){}}
+}
 function startCard(){stopCard();loadCard();wxCardTimer=setInterval(()=>{if(!document.hidden)loadCard()},5*60*1000)}
 function stopCard(){if(wxCardTimer){clearInterval(wxCardTimer);wxCardTimer=null}}
 /* העדכון האוטומטי: בחזרה לאפליקציה (גם מהרקע של הטלפון), כשהחיבור חוזר, ובכל דקה מתעדכן "לפני X דק׳" (ואם עברו 12 דקות בלי עדכון, מושך מחדש) */
@@ -2416,7 +2548,7 @@ function placeDesk(){
   const desk=!canFly();document.body.classList.toggle('desk',desk);
   if(desk){DESK_IDS.forEach(id=>$('dtabs').append($(id)));$('homeBtn').querySelector('.bl').textContent='יומן'}
   else{['tableBtn','studBtn'].forEach(id=>deskHome[id].after($(id)));if(!phoneMQ.matches)['homeBtn','spotsBtn','profBtn','adminBtn'].forEach(id=>navHome[id].after($(id)));$('homeBtn').querySelector('.bl').textContent='בית'}
-  navState();if(token)render();
+  navState();if(token)render();if(wxData&&token)renderCard();
 }
 function hideDesk(){$('tableView').hidden=true;$('studView').hidden=true}
 function openDeskView(id){
